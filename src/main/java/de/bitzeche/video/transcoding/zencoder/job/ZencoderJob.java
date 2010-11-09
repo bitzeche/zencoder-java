@@ -1,4 +1,4 @@
-package de.bitzeche.video.transcoding.zencoder;
+package de.bitzeche.video.transcoding.zencoder.job;
 
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -22,7 +22,7 @@ import de.bitzeche.video.transcoding.zencoder.enums.ZencoderRegion;
 
 public class ZencoderJob {
 
-	private int JOB_ID;
+	private int JobId;
 
 	private String inputPath;
 
@@ -116,8 +116,8 @@ public class ZencoderJob {
 		return this.getClass().getSimpleName();
 	}
 
-	public int getJOB_ID() {
-		return JOB_ID;
+	public int getJobId() {
+		return JobId;
 	}
 
 	public String getInputPath() {
@@ -136,8 +136,8 @@ public class ZencoderJob {
 		return isTest;
 	}
 
-	public void setJOB_ID(int jOB_ID) {
-		JOB_ID = jOB_ID;
+	public void setJobId(int id) {
+		JobId = id;
 	}
 
 	public void setInputPath(String inputPath) {

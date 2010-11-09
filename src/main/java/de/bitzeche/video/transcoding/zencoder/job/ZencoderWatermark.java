@@ -1,4 +1,4 @@
-package de.bitzeche.video.transcoding.zencoder;
+package de.bitzeche.video.transcoding.zencoder.job;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;

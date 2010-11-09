@@ -25,10 +25,12 @@ import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.client.apache.ApacheHttpClient;
 
+import de.bitzeche.video.transcoding.zencoder.job.ZencoderJob;
 
 public class ZencoderClient implements IZencoderClient {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(ZencoderClient.class);
+	private static final Logger LOGGER = LoggerFactory
+			.getLogger(ZencoderClient.class);
 	private ApacheHttpClient httpClient;
 	private XPath xPath;
 	private String ZENCODER_API_KEY;
@@ -45,33 +47,87 @@ public class ZencoderClient implements IZencoderClient {
 		Document data;
 		try {
 			data = job.createXML();
-			if(data == null) {
+			if (data == null) {
 				LOGGER.error("Got no XML from Job");
 			}
 			Element apikey = data.createElement("api_key");
 			apikey.setTextContent(ZENCODER_API_KEY);
 			data.getDocumentElement().appendChild(apikey);
-			return sendRequest("https://app.zencoder.com/api/jobs?format=xml", data);
+			Document response = sendPostRequest(
+					"https://app.zencoder.com/api/jobs?format=xml", data);
+			String id = (String) xPath.evaluate("/api-response/job/id",
+					response, XPathConstants.STRING);
+			if (id != null) {
+				job.setJobId(Integer.parseInt(id));
+			}
+			return response;
 		} catch (ParserConfigurationException e) {
-			// TODO Auto-generated catch block
+		} catch (XPathExpressionException e) {
 		}
 		return null;
 	}
 
-	protected Document sendRequest(String url, Document xml) {
+	public boolean resubmitJob(ZencoderJob job) {
+		int id;
+		if ((id = job.getJobId()) != 0) {
+			String url = "https://app.zencoder.com/api/jobs/" + id
+					+ "/resubmit?api_key=" + ZENCODER_API_KEY;
+			ClientResponse res = sendGetRequest(url);
+			return (res.getStatus() == 200);
+		}
+		return false;
+	}
+
+	@Override
+	public boolean cancelJob(ZencoderJob job) {
+		int id;
+		if ((id = job.getJobId()) != 0) {
+			String url = "https://app.zencoder.com/api/jobs/" + id
+					+ "/cancel?api_key=" + ZENCODER_API_KEY;
+			ClientResponse res = sendGetRequest(url);
+			return (res.getStatus() == 200);
+		}
+		return false;
+	}
+
+	public boolean deleteJob(ZencoderJob job) {
+		int id;
+		if ((id = job.getJobId()) != 0) {
+			String url = "https://app.zencoder.com/api/jobs/" + id
+					+ "?api_key=" + ZENCODER_API_KEY;
+			LOGGER.debug("calling to delete job: {}", url);
+			WebResource webResource = httpClient.resource(url);
+			ClientResponse res = webResource.delete(ClientResponse.class);
+			return (res.getStatus() == 200);
+		}
+		return false;
+	}
+
+	protected ClientResponse sendGetRequest(String url) {
+		LOGGER.debug("calling: {}", url);
+		WebResource webResource = httpClient.resource(url);
+		return webResource.get(ClientResponse.class);
+
+	}
+
+	protected Document sendPostRequest(String url, Document xml) {
 		try {
 			LOGGER.debug("submitting: {}", XmltoString(xml));
 		} catch (TransformerException e2) {
 		}
 		try {
 			WebResource webResource = httpClient.resource(url);
-			return webResource.accept(MediaType.APPLICATION_XML).header("Content-Type", "application/xml").post(Document.class, xml);
+			return webResource.accept(MediaType.APPLICATION_XML)
+					.header("Content-Type", "application/xml")
+					.post(Document.class, xml);
 		} catch (UniformInterfaceException e) {
 			ClientResponse resp = e.getResponse();
 			Document errorXml = resp.getEntity(Document.class);
 			String errormessage = e.getMessage();
 			try {
-				errormessage = (String) xPath.evaluate("/api-response/errors/error", errorXml, XPathConstants.STRING);
+				errormessage = (String) xPath.evaluate(
+						"/api-response/errors/error", errorXml,
+						XPathConstants.STRING);
 			} catch (XPathExpressionException e1) {
 				// ignore
 			}
@@ -81,15 +137,19 @@ public class ZencoderClient implements IZencoderClient {
 
 	}
 
-	protected static String XmltoString(Document document) throws TransformerException {
+	protected static String XmltoString(Document document)
+			throws TransformerException {
 		StringWriter stringWriter = new StringWriter();
 		StreamResult streamResult = new StreamResult(stringWriter);
-		TransformerFactory transformerFactory = TransformerFactory.newInstance();
+		TransformerFactory transformerFactory = TransformerFactory
+				.newInstance();
 		Transformer transformer = transformerFactory.newTransformer();
 		transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-		transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+		transformer.setOutputProperty(
+				"{http://xml.apache.org/xslt}indent-amount", "2");
 		transformer.setOutputProperty(OutputKeys.METHOD, "xml");
-		transformer.transform(new DOMSource(document.getDocumentElement()), streamResult);
+		transformer.transform(new DOMSource(document.getDocumentElement()),
+				streamResult);
 		return stringWriter.toString();
 	}
 }

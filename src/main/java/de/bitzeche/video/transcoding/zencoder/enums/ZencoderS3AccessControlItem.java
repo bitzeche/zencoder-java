@@ -6,7 +6,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
-import de.bitzeche.video.transcoding.zencoder.ZencoderS3AccessControlRight;
+import de.bitzeche.video.transcoding.zencoder.job.ZencoderS3AccessControlRight;
 
 
 public class ZencoderS3AccessControlItem {

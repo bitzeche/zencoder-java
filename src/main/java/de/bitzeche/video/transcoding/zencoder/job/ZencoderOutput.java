@@ -1,11 +1,9 @@
-package de.bitzeche.video.transcoding.zencoder;
+package de.bitzeche.video.transcoding.zencoder.job;
 
 import java.util.ArrayList;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-
-import com.beust.jcommander.ParameterException;
 
 import de.bitzeche.video.transcoding.zencoder.enums.ZencoderAspectMode;
 import de.bitzeche.video.transcoding.zencoder.enums.ZencoderAudioCodec;
@@ -18,6 +16,7 @@ public class ZencoderOutput {
 	private Document xmlDocument;
 	private ZencoderWatermark watermark;
 	private ZencoderThumbnail thumbnail;
+	private ArrayList<ZencoderNotification> notifications = new ArrayList<ZencoderNotification>();
 
 	/*
 	 * General
@@ -79,8 +78,10 @@ public class ZencoderOutput {
 	}
 
 	public Element createXML(Document document) {
-		if (this.basetURL == null && this.outputURL == null && this.filename == null) {
-			throw new ParameterException("We need don't know where to store this");
+		if (this.basetURL == null && this.outputURL == null
+				&& this.filename == null) {
+			throw new IllegalArgumentException(
+					"We need don't know where to store this");
 		}
 
 		this.xmlDocument = document;
@@ -144,6 +145,17 @@ public class ZencoderOutput {
 				}
 			}
 		}
+		if (this.notifications.size() != 0) {
+			Element notifis = document.createElement("notifications");
+			notifis.setAttribute("type", "array");
+			root.appendChild(notifis);
+			for (ZencoderNotification item : this.notifications) {
+				Element notif = item.createXML(document);
+				if (notif != null) {
+					notifis.appendChild(notif);
+				}
+			}
+		}
 
 		return root;
 	}
@@ -163,7 +175,8 @@ public class ZencoderOutput {
 		return elem;
 	}
 
-	protected void createAndAppendElement(String name, String textValue, Element rootNode) {
+	protected void createAndAppendElement(String name, String textValue,
+			Element rootNode) {
 		if (textValue != null) {
 			Element elem = createElement(name, textValue);
 			if (elem != null) {
@@ -172,17 +185,20 @@ public class ZencoderOutput {
 		}
 	}
 
-	protected void createAndAppendElement(String name, boolean value, Element rootNode) {
+	protected void createAndAppendElement(String name, boolean value,
+			Element rootNode) {
 		createAndAppendElement(name, (value ? "1" : "0"), rootNode);
 	}
 
-	protected void createAndAppendElement(String name, int value, Element rootNode) {
+	protected void createAndAppendElement(String name, int value,
+			Element rootNode) {
 		if (value != 0) {
 			createAndAppendElement(name, ("" + value), rootNode);
 		}
 	}
 
-	protected void createAndAppendElement(String name, float value, Element rootNode) {
+	protected void createAndAppendElement(String name, float value,
+			Element rootNode) {
 		if (value != 0) {
 			createAndAppendElement(name, ("" + value), rootNode);
 		}
@@ -393,12 +409,17 @@ public class ZencoderOutput {
 	}
 
 	public void setZencoderAudioCodec(ZencoderAudioCodec codec) {
-		if ((videoCodec.equals(ZencoderVideoCodec.h264) || videoCodec.equals(ZencoderVideoCodec.vp6))
-				&& !(codec.equals(ZencoderAudioCodec.mp3) || codec.equals(ZencoderAudioCodec.aac))) {
-			throw new IllegalArgumentException("H264 and VP6 only support MP3 or AAC");
-		} else if ((videoCodec.equals(ZencoderVideoCodec.theora) || videoCodec.equals(ZencoderVideoCodec.vp8))
+		if ((videoCodec.equals(ZencoderVideoCodec.h264) || videoCodec
+				.equals(ZencoderVideoCodec.vp6))
+				&& !(codec.equals(ZencoderAudioCodec.mp3) || codec
+						.equals(ZencoderAudioCodec.aac))) {
+			throw new IllegalArgumentException(
+					"H264 and VP6 only support MP3 or AAC");
+		} else if ((videoCodec.equals(ZencoderVideoCodec.theora) || videoCodec
+				.equals(ZencoderVideoCodec.vp8))
 				&& !codec.equals(ZencoderAudioCodec.vorbis)) {
-			throw new IllegalArgumentException("H264 and VP8 only support MP3 or AAC");
+			throw new IllegalArgumentException(
+					"H264 and VP8 only support MP3 or AAC");
 		}
 		this.audioCodec = codec;
 	}

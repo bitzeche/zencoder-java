@@ -1,4 +1,4 @@
-package de.bitzeche.video.transcoding.zencoder;
+package de.bitzeche.video.transcoding.zencoder.job;
 
 import java.util.ArrayList;
 
