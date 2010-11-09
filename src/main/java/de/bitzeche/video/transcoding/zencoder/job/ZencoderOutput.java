@@ -14,7 +14,7 @@ import de.bitzeche.video.transcoding.zencoder.enums.ZencoderVideoCodec;
 public class ZencoderOutput {
 
 	private Document xmlDocument;
-	private ZencoderWatermark watermark;
+	private ArrayList<ZencoderWatermark> watermarks;
 	private ZencoderThumbnail thumbnail;
 	private ArrayList<ZencoderNotification> notifications = new ArrayList<ZencoderNotification>();
 
@@ -123,10 +123,14 @@ public class ZencoderOutput {
 		createAndAppendElement("audio_channels", this.audioChannels, root);
 		createAndAppendElement("skip_audio", this.skipAudio, root);
 
-		if (this.watermark != null) {
-			Element wm = this.watermark.createXML(document);
-			if (wm != null) {
-				root.appendChild(wm);
+		if (this.watermarks.size() != 0) {
+			Element wms = document.createElement("watermarks");
+			root.appendChild(wms);
+			for (ZencoderWatermark item : this.watermarks) {
+				Element wm = item.createXML(document);
+				if (wm != null) {
+					wms.appendChild(wm);
+				}
 			}
 		}
 		if (this.thumbnail != null) {
@@ -222,10 +226,6 @@ public class ZencoderOutput {
 
 	public ZencoderVideoCodec getZencoderVideoCodec() {
 		return videoCodec;
-	}
-
-	public ZencoderWatermark getWatermark() {
-		return watermark;
 	}
 
 	public String getLabel() {
@@ -491,9 +491,6 @@ public class ZencoderOutput {
 		}
 	}
 
-	public void setWatermark(ZencoderWatermark watermark) {
-		this.watermark = watermark;
-	}
 
 	public void setLabel(String label) {
 		this.label = label;
@@ -577,5 +574,20 @@ public class ZencoderOutput {
 
 	public void deleteAcl(ZencoderS3AccessControlItem item) {
 		this.aclItems.remove(item);
+	}
+	
+	public void addNotification(ZencoderNotification item) {
+		this.notifications.add(item);
+	}
+
+	public void deleteNotification(ZencoderNotification item) {
+		this.notifications.remove(item);
+	}
+	public void addWatermark(ZencoderWatermark item) {
+		this.watermarks.add(item);
+	}
+
+	public void deleteWatermark(ZencoderWatermark item) {
+		this.watermarks.remove(item);
 	}
 }

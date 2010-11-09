@@ -70,37 +70,48 @@ public class ZencoderClient implements IZencoderClient {
 	public boolean resubmitJob(ZencoderJob job) {
 		int id;
 		if ((id = job.getJobId()) != 0) {
-			String url = "https://app.zencoder.com/api/jobs/" + id
-					+ "/resubmit?api_key=" + ZENCODER_API_KEY;
-			ClientResponse res = sendGetRequest(url);
-			return (res.getStatus() == 200);
+			return resubmitJob(id);
 		}
 		return false;
 	}
 
-	@Override
+	public boolean resubmitJob(int id) {
+		String url = "https://app.zencoder.com/api/jobs/" + id
+				+ "/resubmit?api_key=" + ZENCODER_API_KEY;
+		ClientResponse res = sendGetRequest(url);
+		return (res.getStatus() == 200);
+	}
+
 	public boolean cancelJob(ZencoderJob job) {
 		int id;
 		if ((id = job.getJobId()) != 0) {
-			String url = "https://app.zencoder.com/api/jobs/" + id
-					+ "/cancel?api_key=" + ZENCODER_API_KEY;
-			ClientResponse res = sendGetRequest(url);
-			return (res.getStatus() == 200);
+			return cancelJob(id);
 		}
 		return false;
+	}
+
+	public boolean cancelJob(int id) {
+		String url = "https://app.zencoder.com/api/jobs/" + id
+				+ "/cancel?api_key=" + ZENCODER_API_KEY;
+		ClientResponse res = sendGetRequest(url);
+		return (res.getStatus() == 200);
 	}
 
 	public boolean deleteJob(ZencoderJob job) {
 		int id;
 		if ((id = job.getJobId()) != 0) {
-			String url = "https://app.zencoder.com/api/jobs/" + id
-					+ "?api_key=" + ZENCODER_API_KEY;
-			LOGGER.debug("calling to delete job: {}", url);
-			WebResource webResource = httpClient.resource(url);
-			ClientResponse res = webResource.delete(ClientResponse.class);
-			return (res.getStatus() == 200);
+			return deleteJob(id);
 		}
 		return false;
+	}
+
+	public boolean deleteJob(int id) {
+		String url = "https://app.zencoder.com/api/jobs/" + id + "?api_key="
+				+ ZENCODER_API_KEY;
+		LOGGER.debug("calling to delete job: {}", url);
+		WebResource webResource = httpClient.resource(url);
+		ClientResponse res = webResource.delete(ClientResponse.class);
+		return (res.getStatus() == 200);
 	}
 
 	protected ClientResponse sendGetRequest(String url) {

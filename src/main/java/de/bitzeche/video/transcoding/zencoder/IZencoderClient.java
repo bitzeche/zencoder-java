@@ -14,9 +14,12 @@ public interface IZencoderClient {
 	 */
 	public Document createJob(ZencoderJob job);
 	
+	public boolean resubmitJob(int jobId);
 	public boolean resubmitJob(ZencoderJob job);
 
+	public boolean cancelJob(int jobId);
 	public boolean cancelJob(ZencoderJob job);
 
+	public boolean deleteJob(int jobId);
 	public boolean deleteJob(ZencoderJob job);
 }
