@@ -1,11 +1,10 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>de.bitzeche.video.transcoding</groupId>
 	<artifactId>zencoder-api</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.8.0</version>
 	<packaging>jar</packaging>
-	<name>Zencoder API Client</name>
+	<name>Java Client for Zencoder API</name>
 
 	<licenses>
 		<license>
@@ -14,9 +13,9 @@
 		</license>
 	</licenses>
 	<scm>
-		<connection>scm:svn:http://zencoder-java.googlecode.com/svn/trunk</connection>
-		<developerConnection>scm:svn:https://zencoder-java.googlecode.com/svn/trunk</developerConnection>
-		<url>http://zencoder-java.googlecode.com/svn/trunk</url>
+		<connection>scm:svn:https://zencoder-java.googlecode.com/svn/tags/0.8</connection>
+		<developerConnection>scm:svn:https://zencoder-java.googlecode.com/svn/tags/0.8</developerConnection>
+		<url>http://zencoder-java.googlecode.com/svn/tags/0.8</url>
 	</scm>
 	<organization>
 		<name>Bitzeche GmbH</name>
