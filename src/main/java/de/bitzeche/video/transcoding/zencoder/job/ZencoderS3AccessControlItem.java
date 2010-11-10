@@ -17,6 +17,7 @@
 package de.bitzeche.video.transcoding.zencoder.job;
 
 import java.io.StringWriter;
+import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -33,88 +34,33 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
-public class ZencoderWatermark {
+import de.bitzeche.video.transcoding.zencoder.enums.ZencoderS3AccessControlRight;
 
-	private String url;
-	private String x = "-10";
-	private String y = "-10";
-	private int width;
-	private int height;
+public class ZencoderS3AccessControlItem {
+	private String grantee;
+	List<ZencoderS3AccessControlRight> rights;
 
-	public ZencoderWatermark(String url) {
-		this.url = url;
+	public ZencoderS3AccessControlItem(String grantee,
+			List<ZencoderS3AccessControlRight> rights) {
+		this.grantee = grantee;
+		this.rights = rights;
 	}
 
 	public Element createXML(Document document) {
-		Element root = document.createElement("watermark");
+		Element root = document.createElement("access_control");
 
-		Node urlNode = document.createElement("url");
-		urlNode.setTextContent(this.url);
-		root.appendChild(urlNode);
+		Node granteeNode = document.createElement("grantee");
+		granteeNode.setTextContent(this.grantee);
+		root.appendChild(granteeNode);
+		Element permissions = document.createElement("permissions");
+		root.appendChild(permissions);
 
-		Node xNode = document.createElement("x");
-		xNode.setTextContent(this.x);
-		root.appendChild(xNode);
-
-		Node yNode = document.createElement("y");
-		yNode.setTextContent(this.y);
-		root.appendChild(yNode);
-
-		if (this.width != 0) {
-			Node wNode = document.createElement("width");
-			wNode.setTextContent("" + this.width);
-			root.appendChild(wNode);
-		}
-		if (this.height != 0) {
-			Node hNode = document.createElement("height");
-			hNode.setTextContent("" + this.height);
-			root.appendChild(hNode);
+		for (ZencoderS3AccessControlRight right : rights) {
+			Node permission = document.createElement("permission");
+			permission.setTextContent(right.name());
+			permissions.appendChild(permission);
 		}
 		return root;
-	}
-
-	public String getUrl() {
-		return url;
-	}
-
-	public String getX() {
-		return x;
-	}
-
-	public String getY() {
-		return y;
-	}
-
-	public int getWidth() {
-		return width;
-	}
-
-	public int getHeight() {
-		return height;
-	}
-
-	public void setUrl(String url) {
-		this.url = url;
-	}
-
-	public void setX(String x) {
-		this.x = x;
-	}
-
-	public void setY(String y) {
-		this.y = y;
-	}
-
-	public void setWidth(int width) {
-		if (width > 0) {
-			this.width = width;
-		}
-	}
-
-	public void setHeight(int height) {
-		if (height > 0) {
-			this.height = height;
-		}
 	}
 
 	public String toString() {
@@ -157,4 +103,5 @@ public class ZencoderWatermark {
 		}
 		return this.getClass().getSimpleName();
 	}
+
 }

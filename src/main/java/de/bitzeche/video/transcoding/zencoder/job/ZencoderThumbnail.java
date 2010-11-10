@@ -1,18 +1,45 @@
+/**
+ * Copyright (C) ${year} Bitzeche GmbH <info@bitzeche.de>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package de.bitzeche.video.transcoding.zencoder.job;
 
+import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.List;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
-import de.bitzeche.video.transcoding.zencoder.enums.ZencoderS3AccessControlItem;
-
 public class ZencoderThumbnail {
 
 	private int number;
 	private int interval;
-	private ArrayList<Number> times = new ArrayList<Number>();
+	private List<Number> times = new ArrayList<Number>();
 	private String size;
 	private String baseUrl;
 	private String prefix;
@@ -20,11 +47,12 @@ public class ZencoderThumbnail {
 	 * S3
 	 */
 	private boolean isPublic = false;
-	private ArrayList<ZencoderS3AccessControlItem> aclItems = new ArrayList<ZencoderS3AccessControlItem>();
+	private List<ZencoderS3AccessControlItem> aclItems = new ArrayList<ZencoderS3AccessControlItem>();
 
 	public Element createXML(Document document) {
 		if (this.number == 0 && this.interval == 0 && this.times.size() == 0) {
-			throw new IllegalArgumentException("No number, interval or times set");
+			throw new IllegalArgumentException(
+					"No number, interval or times set");
 		}
 		Element root = document.createElement("thumbnails");
 
@@ -105,6 +133,10 @@ public class ZencoderThumbnail {
 		return prefix;
 	}
 
+	public boolean isPublic() {
+		return isPublic;
+	}
+
 	public void setNumber(int number) {
 		if (number > 0) {
 			this.number = number;
@@ -129,6 +161,10 @@ public class ZencoderThumbnail {
 		this.prefix = prefix;
 	}
 
+	public void setPublic(boolean isPublic) {
+		this.isPublic = isPublic;
+	}
+
 	public void addAcl(ZencoderS3AccessControlItem item) {
 		this.aclItems.add(item);
 	}
@@ -137,4 +173,44 @@ public class ZencoderThumbnail {
 		this.aclItems.remove(item);
 	}
 
+	public String toString() {
+		Element elem;
+		Document document;
+		try {
+			DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory
+					.newInstance();
+			DocumentBuilder documentBuilder = documentBuilderFactory
+					.newDocumentBuilder();
+			document = documentBuilder.newDocument();
+
+			elem = createXML(document);
+		} catch (ParserConfigurationException e) {
+			throw new RuntimeException(e);
+		}
+		if (elem != null) {
+			document.appendChild(elem);
+			StringWriter stringWriter = new StringWriter();
+			StreamResult streamResult = new StreamResult(stringWriter);
+			TransformerFactory transformerFactory = TransformerFactory
+					.newInstance();
+			Transformer transformer;
+			try {
+				transformer = transformerFactory.newTransformer();
+
+				transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+				transformer.setOutputProperty(
+						"{http://xml.apache.org/xslt}indent-amount", "2");
+				transformer.setOutputProperty(OutputKeys.METHOD, "xml");
+				transformer.transform(
+						new DOMSource(document.getDocumentElement()),
+						streamResult);
+				return stringWriter.toString();
+			} catch (TransformerConfigurationException e) {
+				throw new RuntimeException(e);
+			} catch (TransformerException e) {
+				throw new RuntimeException(e);
+			}
+		}
+		return this.getClass().getSimpleName();
+	}
 }

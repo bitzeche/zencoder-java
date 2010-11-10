@@ -1,6 +1,35 @@
+/**
+ * Copyright (C) ${year} Bitzeche GmbH <info@bitzeche.de>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package de.bitzeche.video.transcoding.zencoder.job;
 
+import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.List;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -8,15 +37,14 @@ import org.w3c.dom.Element;
 import de.bitzeche.video.transcoding.zencoder.enums.ZencoderAspectMode;
 import de.bitzeche.video.transcoding.zencoder.enums.ZencoderAudioCodec;
 import de.bitzeche.video.transcoding.zencoder.enums.ZencoderDeinterlace;
-import de.bitzeche.video.transcoding.zencoder.enums.ZencoderS3AccessControlItem;
 import de.bitzeche.video.transcoding.zencoder.enums.ZencoderVideoCodec;
 
 public class ZencoderOutput {
 
 	private Document xmlDocument;
-	private ArrayList<ZencoderWatermark> watermarks;
+	private List<ZencoderWatermark> watermarks = new ArrayList<ZencoderWatermark>();
 	private ZencoderThumbnail thumbnail;
-	private ArrayList<ZencoderNotification> notifications = new ArrayList<ZencoderNotification>();
+	private List<ZencoderNotification> notifications = new ArrayList<ZencoderNotification>();
 
 	/*
 	 * General
@@ -44,8 +72,8 @@ public class ZencoderOutput {
 	private int bufferSize;
 	private boolean onePass = false;
 	private ZencoderDeinterlace deinterlace = ZencoderDeinterlace.detect;
-	private float maxFramerate;
-	private float framerate;
+	private float maxFrameRate;
+	private float frameRate;
 	private int decimate;
 	private int keyFrameInterval;
 	private int rotate;
@@ -64,7 +92,7 @@ public class ZencoderOutput {
 	 * S3
 	 */
 	private boolean isPublic = false;
-	private ArrayList<ZencoderS3AccessControlItem> aclItems = new ArrayList<ZencoderS3AccessControlItem>();
+	private List<ZencoderS3AccessControlItem> aclItems = new ArrayList<ZencoderS3AccessControlItem>();
 
 	public ZencoderOutput(String label, String baseUrl, String filename) {
 		this.filename = filename;
@@ -109,8 +137,8 @@ public class ZencoderOutput {
 		createAndAppendElement("buffer_size", this.bufferSize, root);
 		createAndAppendElement("onepass", this.onePass, root);
 		createAndAppendElement("deinterlace", this.deinterlace.name(), root);
-		createAndAppendElement("max_frame_rate", this.maxFramerate, root);
-		createAndAppendElement("frame_rate", this.framerate, root);
+		createAndAppendElement("max_frame_rate", this.maxFrameRate, root);
+		createAndAppendElement("frame_rate", this.frameRate, root);
 		createAndAppendElement("decimate", this.decimate, root);
 		createAndAppendElement("keyframe_interval", this.keyFrameInterval, root);
 		createAndAppendElement("rotate", this.rotate, root);
@@ -224,10 +252,6 @@ public class ZencoderOutput {
 		return filename;
 	}
 
-	public ZencoderVideoCodec getZencoderVideoCodec() {
-		return videoCodec;
-	}
-
 	public String getLabel() {
 		return label;
 	}
@@ -292,12 +316,12 @@ public class ZencoderOutput {
 		return deinterlace;
 	}
 
-	public float getMaxFramerate() {
-		return maxFramerate;
+	public float getMaxFrameRate() {
+		return maxFrameRate;
 	}
 
-	public float getFramerate() {
-		return framerate;
+	public float getFrameRate() {
+		return frameRate;
 	}
 
 	public int getDecimate() {
@@ -340,8 +364,8 @@ public class ZencoderOutput {
 		return skipAudio;
 	}
 
-	public ZencoderThumbnail getThumbnail() {
-		return thumbnail;
+	public boolean isPublic() {
+		return isPublic;
 	}
 
 	/*
@@ -408,7 +432,7 @@ public class ZencoderOutput {
 		}
 	}
 
-	public void setZencoderAudioCodec(ZencoderAudioCodec codec) {
+	public void setAudioCodec(ZencoderAudioCodec codec) {
 		if ((videoCodec.equals(ZencoderVideoCodec.h264) || videoCodec
 				.equals(ZencoderVideoCodec.vp6))
 				&& !(codec.equals(ZencoderAudioCodec.mp3) || codec
@@ -442,7 +466,7 @@ public class ZencoderOutput {
 		}
 	}
 
-	public void setAudioSampleRate(int rate) {
+	public void setAudioSamplerate(int rate) {
 		if (rate < 1000) {
 			this.audioSamplerate = 44100;
 		} else if (rate > 48000) {
@@ -453,7 +477,7 @@ public class ZencoderOutput {
 	}
 
 	public void setAudioChannels(int channels) {
-		if (channels < 1) {
+		if (channels <= 1) {
 			this.audioChannels = 1;
 		} else {
 			this.audioChannels = 2;
@@ -466,7 +490,7 @@ public class ZencoderOutput {
 		} else if (rate > 30) {
 			rate = 30;
 		}
-		this.framerate = rate;
+		this.frameRate = rate;
 	}
 
 	public void setMaxFrameRate(float rate) {
@@ -475,7 +499,7 @@ public class ZencoderOutput {
 		} else if (rate > 30) {
 			rate = 30;
 		}
-		this.maxFramerate = rate;
+		this.maxFrameRate = rate;
 	}
 
 	public void setKeyFrameInterval(int interval) {
@@ -490,7 +514,6 @@ public class ZencoderOutput {
 			this.rotate = degrees;
 		}
 	}
-
 
 	public void setLabel(String label) {
 		this.label = label;
@@ -536,28 +559,12 @@ public class ZencoderOutput {
 		this.deinterlace = deinterlace;
 	}
 
-	public void setMaxFramerate(float maxFramerate) {
-		this.maxFramerate = maxFramerate;
-	}
-
-	public void setFramerate(float framerate) {
-		this.framerate = framerate;
-	}
-
 	public void setDecimate(int decimate) {
 		this.decimate = decimate;
 	}
 
 	public void setSkipVideo(boolean skipVideo) {
 		this.skipVideo = skipVideo;
-	}
-
-	public void setAudioCodec(ZencoderAudioCodec audioCodec) {
-		this.audioCodec = audioCodec;
-	}
-
-	public void setAudioSamplerate(int audioSamplerate) {
-		this.audioSamplerate = audioSamplerate;
 	}
 
 	public void setSkipAudio(boolean skipAudio) {
@@ -568,6 +575,10 @@ public class ZencoderOutput {
 		this.thumbnail = thumbnail;
 	}
 
+	public void setPublic(boolean isPublic) {
+		this.isPublic = isPublic;
+	}
+
 	public void addAcl(ZencoderS3AccessControlItem item) {
 		this.aclItems.add(item);
 	}
@@ -575,7 +586,7 @@ public class ZencoderOutput {
 	public void deleteAcl(ZencoderS3AccessControlItem item) {
 		this.aclItems.remove(item);
 	}
-	
+
 	public void addNotification(ZencoderNotification item) {
 		this.notifications.add(item);
 	}
@@ -583,11 +594,53 @@ public class ZencoderOutput {
 	public void deleteNotification(ZencoderNotification item) {
 		this.notifications.remove(item);
 	}
+
 	public void addWatermark(ZencoderWatermark item) {
 		this.watermarks.add(item);
 	}
 
 	public void deleteWatermark(ZencoderWatermark item) {
 		this.watermarks.remove(item);
+	}
+
+	public String toString() {
+		Element elem;
+		Document document;
+		try {
+			DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory
+					.newInstance();
+			DocumentBuilder documentBuilder = documentBuilderFactory
+					.newDocumentBuilder();
+			document = documentBuilder.newDocument();
+
+			elem = createXML(document);
+		} catch (ParserConfigurationException e) {
+			throw new RuntimeException(e);
+		}
+		if (elem != null) {
+			document.appendChild(elem);
+			StringWriter stringWriter = new StringWriter();
+			StreamResult streamResult = new StreamResult(stringWriter);
+			TransformerFactory transformerFactory = TransformerFactory
+					.newInstance();
+			Transformer transformer;
+			try {
+				transformer = transformerFactory.newTransformer();
+
+				transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+				transformer.setOutputProperty(
+						"{http://xml.apache.org/xslt}indent-amount", "2");
+				transformer.setOutputProperty(OutputKeys.METHOD, "xml");
+				transformer.transform(
+						new DOMSource(document.getDocumentElement()),
+						streamResult);
+				return stringWriter.toString();
+			} catch (TransformerConfigurationException e) {
+				throw new RuntimeException(e);
+			} catch (TransformerException e) {
+				throw new RuntimeException(e);
+			}
+		}
+		return this.getClass().getSimpleName();
 	}
 }

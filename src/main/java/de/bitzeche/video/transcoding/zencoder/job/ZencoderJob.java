@@ -1,7 +1,24 @@
+/**
+ * Copyright (C) ${year} Bitzeche GmbH <info@bitzeche.de>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *         http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package de.bitzeche.video.transcoding.zencoder.job;
 
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -32,7 +49,7 @@ public class ZencoderJob {
 
 	private boolean isTest = false;
 
-	private ArrayList<ZencoderOutput> outputs = new ArrayList<ZencoderOutput>();
+	private List<ZencoderOutput> outputs = new ArrayList<ZencoderOutput>();
 
 	public ZencoderJob(String inputPath) {
 		this.inputPath = inputPath;
@@ -47,14 +64,14 @@ public class ZencoderJob {
 	}
 
 	public Document createXML() throws ParserConfigurationException {
-		if (outputs.size() == 0)
-			return null;
-		DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
-		DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
+		DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory
+				.newInstance();
+		DocumentBuilder documentBuilder = documentBuilderFactory
+				.newDocumentBuilder();
 		Document document = documentBuilder.newDocument();
 		Element root = document.createElement("api-request");
 		document.appendChild(root);
-		
+
 		// input
 		Node input = document.createElement("input");
 		input.setTextContent(this.inputPath);
@@ -67,19 +84,22 @@ public class ZencoderJob {
 			root.appendChild(region);
 		}
 
-		Node download_connections = document.createElement("download_connections");
+		Node download_connections = document
+				.createElement("download_connections");
 		download_connections.setTextContent("" + this.downloadConnections);
 		root.appendChild(download_connections);
 
 		Node test = document.createElement("test");
 		test.setTextContent((this.isTest ? "1" : "0"));
 		root.appendChild(test);
-		
+
+		if (outputs.size() == 0)
+			return document;
+
 		Element output_nodes = document.createElement("outputs");
 		output_nodes.setAttribute("type", "array");
 		root.appendChild(output_nodes);
-		
-		
+
 		for (ZencoderOutput output : outputs) {
 			Element out = output.createXML(document);
 			if (out != null) {
@@ -94,23 +114,30 @@ public class ZencoderJob {
 		try {
 			document = createXML();
 		} catch (ParserConfigurationException e) {
+			throw new RuntimeException(e);
 		}
 		if (document != null) {
 
 			StringWriter stringWriter = new StringWriter();
 			StreamResult streamResult = new StreamResult(stringWriter);
-			TransformerFactory transformerFactory = TransformerFactory.newInstance();
+			TransformerFactory transformerFactory = TransformerFactory
+					.newInstance();
 			Transformer transformer;
 			try {
 				transformer = transformerFactory.newTransformer();
 
 				transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-				transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+				transformer.setOutputProperty(
+						"{http://xml.apache.org/xslt}indent-amount", "2");
 				transformer.setOutputProperty(OutputKeys.METHOD, "xml");
-				transformer.transform(new DOMSource(document.getDocumentElement()), streamResult);
+				transformer.transform(
+						new DOMSource(document.getDocumentElement()),
+						streamResult);
 				return stringWriter.toString();
 			} catch (TransformerConfigurationException e) {
+				throw new RuntimeException(e);
 			} catch (TransformerException e) {
+				throw new RuntimeException(e);
 			}
 		}
 		return this.getClass().getSimpleName();
