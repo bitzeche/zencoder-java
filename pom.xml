@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>de.bitzeche.video.transcoding</groupId>
 	<artifactId>zencoder-api</artifactId>
-	<version>0.10-SNAPSHOT</version>
+	<version>0.9.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>Java Client for Zencoder API</name>
 
