@@ -33,7 +33,7 @@ public class ZencoderOutputTest {
 	public void testWithoutOptions() throws ParserConfigurationException {
 		ZencoderOutput output = new ZencoderOutput("test", "http://testpath/");
 
-		String doc = output.toString().replaceAll(" ", "").replaceAll("\n", "");
+		String doc = StringUtil.stripSpacesAndLineBreaksFrom(output.toString());
 		String expected = "<?xmlversion=\"1.0\"encoding=\"UTF-8\"?><ouput><label>test</label><url>http://testpath/</url><speed>4</speed><public>0</public><video_codec>h264</video_codec><upscale>0</upscale><onepass>0</onepass><deinterlace>detect</deinterlace><skip_video>0</skip_video><audio_codec>aac</audio_codec><skip_audio>0</skip_audio></ouput>";
 		Assert.assertEquals(doc, expected);
 		// System.out.println(doc);
@@ -71,7 +71,7 @@ public class ZencoderOutputTest {
 		output.setWidth(12);
 		output.setPublic(true);
 
-		String doc = output.toString().replaceAll(" ", "").replaceAll("\n", "");
+		String doc = StringUtil.stripSpacesAndLineBreaksFrom(output.toString());
 		String expected = "<?xmlversion=\"1.0\"encoding=\"UTF-8\"?><ouput><label>test</label><url>http://testpath/</url><speed>1</speed><start_clip>56:00</start_clip><clip_length>12.5</clip_length><public>1</public><video_codec>theora</video_codec><width>12</width><height>1234</height><size>123X456</size><upscale>1</upscale><aspect_mode>crop</aspect_mode><quality>1</quality><video_bitrate>12345</video_bitrate><bitrate_cap>123</bitrate_cap><buffer_size>12345</buffer_size><onepass>1</onepass><deinterlace>on</deinterlace><max_frame_rate>29.0</max_frame_rate><frame_rate>13.0</frame_rate><decimate>2</decimate><keyframe_interval>12</keyframe_interval><rotate>90</rotate><skip_video>1</skip_video><audio_codec>mp3</audio_codec><audio_bitrate>128</audio_bitrate><audio_sample_rate>12300</audio_sample_rate><audio_quality>1</audio_quality><audio_channels>1</audio_channels><skip_audio>1</skip_audio></ouput>";
 		Assert.assertEquals(doc, expected);
 		// System.out.println(doc);

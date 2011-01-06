@@ -29,7 +29,7 @@ public class ZencoderJobTest {
 	@Test
 	public void testWithoutOptions() throws ParserConfigurationException {
 		ZencoderJob job = new ZencoderJob("http://testpath/");
-		String doc = job.toString().replaceAll(" ", "").replaceAll("\n", "");
+		String doc = StringUtil.stripSpacesAndLineBreaksFrom(job.toString());
 		String expected = ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
 				+ "<api-request>" + "<input>http://testpath/</input>"
 				+ "<download_connections>5</download_connections>"
@@ -45,7 +45,7 @@ public class ZencoderJobTest {
 		job.setTest(true);
 		job.setZencoderRegion(ZencoderRegion.ASIA);
 		
-		String doc = job.toString().replaceAll(" ", "").replaceAll("\n", "");
+		String doc = StringUtil.stripSpacesAndLineBreaksFrom(job.toString());
 		String expected = ("<?xmlversion=\"1.0\"encoding=\"UTF-8\"?><api-request><input>http://testpath/</input><region>asia</region><download_connections>10</download_connections><test>1</test></api-request>");
 		Assert.assertEquals(doc, expected);
 //		System.out.println(doc);

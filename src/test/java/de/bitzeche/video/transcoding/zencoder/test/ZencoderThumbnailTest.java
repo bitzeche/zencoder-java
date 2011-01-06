@@ -39,7 +39,7 @@ public class ZencoderThumbnailTest {
 		thumb.setInterval(10);
 		thumb.setPrefix("abc");
 		thumb.setSize("120x1999");
-		String doc = thumb.toString().replaceAll(" ", "").replaceAll("\n", "");
+		String doc = StringUtil.stripSpacesAndLineBreaksFrom(thumb.toString());
 		String expected = "<?xmlversion=\"1.0\"encoding=\"UTF-8\"?><thumbnails><number>101</number><interval>10</interval><size>120x1999</size><base_url>http://url/</base_url><prefix>abc</prefix><public>0</public></thumbnails>";
 		// System.out.println(doc);
 		Assert.assertEquals(doc, expected);

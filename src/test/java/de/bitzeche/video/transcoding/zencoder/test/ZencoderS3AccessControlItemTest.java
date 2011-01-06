@@ -38,7 +38,7 @@ public class ZencoderS3AccessControlItemTest {
 
 		ZencoderS3AccessControlItem ca = new ZencoderS3AccessControlItem(
 				"test", rights);
-		String doc = ca.toString().replaceAll(" ", "").replaceAll("\n", "");
+		String doc = StringUtil.stripSpacesAndLineBreaksFrom(ca.toString());
 		String expected = "<?xmlversion=\"1.0\"encoding=\"UTF-8\"?><access_control><grantee>test</grantee><permissions><permission>FULL_CONTROL</permission><permission>READ</permission></permissions></access_control>";
 		// System.out.println(doc);
 		Assert.assertEquals(doc, expected);
