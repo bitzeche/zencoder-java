@@ -25,7 +25,6 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import de.bitzeche.video.transcoding.zencoder.enums.ZencoderS3AccessControlRight;
-import de.bitzeche.video.transcoding.zencoder.job.ZencoderNotification;
 import de.bitzeche.video.transcoding.zencoder.job.ZencoderS3AccessControlItem;
 
 public class ZencoderS3AccessControlItemTest {
