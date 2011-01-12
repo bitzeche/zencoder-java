@@ -6,7 +6,7 @@
 	<version>0.9.2-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>Java Client for Zencoder API</name>
-
+	<inceptionYear>2011</inceptionYear>
 	<licenses>
 		<license>
 			<name>The Apache Software License, Version 2.0</name>
@@ -14,9 +14,9 @@
 		</license>
 	</licenses>
 	<scm>
-		<connection>scm:svn:http://zencoder-java.googlecode.com/svn/tags/zencoder-api-0.9</connection>
-		<developerConnection>scm:svn:https://zencoder-java.googlecode.com/svn/tags/zencoder-api-0.9</developerConnection>
-		<url>http://zencoder-java.googlecode.com/svn/tags/zencoder-api-0.9</url>
+		<connection>scm:svn:http://zencoder-java.googlecode.com/svn/trunk</connection>
+		<developerConnection>scm:svn:https://zencoder-java.googlecode.com/svn/trunk</developerConnection>
+		<url>http://zencoder-java.googlecode.com/svn/trunk</url>
 	</scm>
 	<organization>
 		<name>Bitzeche GmbH</name>
