@@ -21,6 +21,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import de.bitzeche.video.transcoding.zencoder.enums.ZencoderThumbnailFormat;
 import de.bitzeche.video.transcoding.zencoder.job.ZencoderThumbnail;
 
 public class ZencoderThumbnailTest {
@@ -39,8 +40,9 @@ public class ZencoderThumbnailTest {
 		thumb.setInterval(10);
 		thumb.setPrefix("abc");
 		thumb.setSize("120x1999");
+		thumb.setFormat(ZencoderThumbnailFormat.JPG);
 		String doc = StringUtil.stripSpacesAndLineBreaksFrom(thumb.toString());
-		String expected = "<?xmlversion=\"1.0\"encoding=\"UTF-8\"?><thumbnails><number>101</number><interval>10</interval><size>120x1999</size><base_url>http://url/</base_url><prefix>abc</prefix><public>0</public></thumbnails>";
+		String expected = "<?xmlversion=\"1.0\"encoding=\"UTF-8\"?><thumbnails><number>101</number><interval>10</interval><size>120x1999</size><format>jpg</format><base_url>http://url/</base_url><prefix>abc</prefix><public>0</public></thumbnails>";
 		// System.out.println(doc);
 		Assert.assertEquals(doc, expected);
 	}

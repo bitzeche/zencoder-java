@@ -35,6 +35,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
+import de.bitzeche.video.transcoding.zencoder.enums.ZencoderThumbnailFormat;
+
 public class ZencoderThumbnail {
 
 	private int number;
@@ -43,6 +45,8 @@ public class ZencoderThumbnail {
 	private String size;
 	private String baseUrl;
 	private String prefix;
+	private ZencoderThumbnailFormat format;
+
 	/*
 	 * S3
 	 */
@@ -78,6 +82,12 @@ public class ZencoderThumbnail {
 		if (this.size != null) {
 			Node sizeNode = document.createElement("size");
 			sizeNode.setTextContent(this.size);
+			root.appendChild(sizeNode);
+		}
+		
+		if (this.format != null) {
+			Node sizeNode = document.createElement("format");
+			sizeNode.setTextContent(this.format.name().toLowerCase());
 			root.appendChild(sizeNode);
 		}
 
@@ -132,11 +142,18 @@ public class ZencoderThumbnail {
 	public String getPrefix() {
 		return prefix;
 	}
+	public ZencoderThumbnailFormat getFormat() {
+		return format;
+	}
 
 	public boolean isPublic() {
 		return isPublic;
 	}
 
+
+	public void setFormat(ZencoderThumbnailFormat format) {
+		this.format = format;
+	}
 	public void setNumber(int number) {
 		if (number > 0) {
 			this.number = number;
