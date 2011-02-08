@@ -24,6 +24,7 @@ import org.testng.annotations.Test;
 
 import de.bitzeche.video.transcoding.zencoder.IZencoderClient;
 import de.bitzeche.video.transcoding.zencoder.ZencoderClient;
+import de.bitzeche.video.transcoding.zencoder.enums.ZencoderDenoiseFilter;
 import de.bitzeche.video.transcoding.zencoder.enums.ZencoderS3AccessControlRight;
 import de.bitzeche.video.transcoding.zencoder.job.ZencoderJob;
 import de.bitzeche.video.transcoding.zencoder.job.ZencoderNotification;
@@ -62,12 +63,17 @@ public class ZencoderClientTest {
 		out.addNotification(notif2);
 		out.addWatermark(watermark);
 		out.addWatermark(watermark2);
+		
+		out2.setDeblock(true);
+		out2.setAutolevel(true);
+		out2.setDenoise(ZencoderDenoiseFilter.WEAK);
 		ZencoderJob job = new ZencoderJob("http://test4/");
 		job.addOutput(out);
 		job.addOutput(out2);
+		job.setPrivate(true);
 
 		String doc = StringUtil.stripSpacesAndLineBreaksFrom( job );
-		String expected = "<?xmlversion=\"1.0\"encoding=\"UTF-8\"?><api-request><input>http://test4/</input><download_connections>5</download_connections><test>0</test><outputstype=\"array\"><ouput><label>test</label><url>se://test/</url><speed>4</speed><public>0</public><video_codec>h264</video_codec><upscale>0</upscale><onepass>0</onepass><deinterlace>detect</deinterlace><skip_video>0</skip_video><audio_codec>aac</audio_codec><skip_audio>0</skip_audio><watermarks><watermark><url>http://url/</url><x>-10</x><y>-10</y></watermark><watermark><url>http://url/</url><x>-10</x><y>-10</y></watermark></watermarks><access-controls><access_control><grantee>test</grantee><permissions><permission>FULL_CONTROL</permission><permission>READ</permission></permissions></access_control></access-controls><notificationstype=\"array\"><notification><url>test@test.de</url></notification><notification><url>test2@test.de</url></notification></notifications></ouput><ouput><label>test2</label><url>se://test2/</url><speed>4</speed><public>0</public><video_codec>h264</video_codec><upscale>0</upscale><onepass>0</onepass><deinterlace>detect</deinterlace><skip_video>0</skip_video><audio_codec>aac</audio_codec><skip_audio>0</skip_audio></ouput></outputs></api-request>";
+		String expected = "<?xmlversion=\"1.0\"encoding=\"UTF-8\"?><api-request><input>http://test4/</input><download_connections>5</download_connections><test>0</test><private>1</private><outputstype=\"array\"><ouput><label>test</label><url>se://test/</url><speed>4</speed><public>0</public><video_codec>h264</video_codec><upscale>0</upscale><deinterlace>detect</deinterlace><skip_video>0</skip_video><deblock>0</deblock><autolevel>0</autolevel><audio_codec>aac</audio_codec><skip_audio>0</skip_audio><watermarks><watermark><url>http://url/</url><x>-10</x><y>-10</y></watermark><watermark><url>http://url/</url><x>-10</x><y>-10</y></watermark></watermarks><access-controls><access_control><grantee>test</grantee><permissions><permission>FULL_CONTROL</permission><permission>READ</permission></permissions></access_control></access-controls><notificationstype=\"array\"><notification><url>test@test.de</url></notification><notification><url>test2@test.de</url></notification></notifications></ouput><ouput><label>test2</label><url>se://test2/</url><speed>4</speed><public>0</public><video_codec>h264</video_codec><upscale>0</upscale><deinterlace>detect</deinterlace><skip_video>0</skip_video><denoise>weak</denoise><deblock>1</deblock><autolevel>1</autolevel><audio_codec>aac</audio_codec><skip_audio>0</skip_audio></ouput></outputs></api-request>";
 		// System.out.println(doc);
 		Assert.assertEquals(doc, expected);
 	}

@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>de.bitzeche.video.transcoding</groupId>
 	<artifactId>zencoder-api</artifactId>
@@ -56,11 +57,11 @@
 	</reporting>
 	<distributionManagement>
 		<repository>
-			<id>release</id>
+			<id>bitzeche-release</id>
 			<url>dav:http://svn.bitzeche.de:9080/archiva/repository/release/</url>
 		</repository>
 		<snapshotRepository>
-			<id>snapshots</id>
+			<id>bitzeche-snapshots</id>
 			<url>dav:http://svn.bitzeche.de:9080/archiva/repository/snapshots/</url>
 		</snapshotRepository>
 	</distributionManagement>
@@ -142,7 +143,6 @@
 					</execution>
 				</executions>
 			</plugin>
-
 		</plugins>
 		<extensions>
 			<extension>

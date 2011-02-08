@@ -16,20 +16,13 @@
 
 package de.bitzeche.video.transcoding.zencoder.job;
 
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -37,7 +30,9 @@ import org.w3c.dom.Element;
 import de.bitzeche.video.transcoding.zencoder.enums.ZencoderAspectMode;
 import de.bitzeche.video.transcoding.zencoder.enums.ZencoderAudioCodec;
 import de.bitzeche.video.transcoding.zencoder.enums.ZencoderDeinterlace;
+import de.bitzeche.video.transcoding.zencoder.enums.ZencoderDenoiseFilter;
 import de.bitzeche.video.transcoding.zencoder.enums.ZencoderVideoCodec;
+import de.bitzeche.video.transcoding.zencoder.util.XmlUtility;
 
 public class ZencoderOutput {
 
@@ -50,7 +45,7 @@ public class ZencoderOutput {
 	 * General
 	 */
 	private String outputURL = null;
-	private String basetURL = null;
+	private String baseURL = null;
 	private String filename = null;
 	private String label;
 	private int speed = 4;
@@ -70,7 +65,6 @@ public class ZencoderOutput {
 	private int videoBitrate;
 	private int videoBitrateCap;
 	private int bufferSize;
-	private boolean onePass = false;
 	private ZencoderDeinterlace deinterlace = ZencoderDeinterlace.detect;
 	private float maxFrameRate;
 	private float frameRate;
@@ -78,6 +72,9 @@ public class ZencoderOutput {
 	private int keyFrameInterval;
 	private int rotate;
 	private boolean skipVideo = false;
+	private boolean autolevel = false;
+	private boolean deblock = false;
+	private ZencoderDenoiseFilter denoise = ZencoderDenoiseFilter.NONE;
 	/*
 	 * Audio
 	 */
@@ -96,7 +93,7 @@ public class ZencoderOutput {
 
 	public ZencoderOutput(String label, String baseUrl, String filename) {
 		this.filename = filename;
-		this.basetURL = baseUrl;
+		this.baseURL = baseUrl;
 		this.label = label;
 	}
 
@@ -106,7 +103,7 @@ public class ZencoderOutput {
 	}
 
 	public Element createXML(Document document) {
-		if (this.basetURL == null && this.outputURL == null
+		if (this.baseURL == null && this.outputURL == null
 				&& this.filename == null) {
 			throw new IllegalArgumentException(
 					"We need don't know where to store this");
@@ -117,7 +114,7 @@ public class ZencoderOutput {
 
 		createAndAppendElement("label", this.label, root);
 		createAndAppendElement("url", this.outputURL, root);
-		createAndAppendElement("base_url", this.basetURL, root);
+		createAndAppendElement("base_url", this.baseURL, root);
 		createAndAppendElement("filename", this.filename, root);
 		createAndAppendElement("speed", this.speed, root);
 		createAndAppendElement("start_clip", this.startClip, root);
@@ -135,7 +132,6 @@ public class ZencoderOutput {
 		createAndAppendElement("video_bitrate", this.videoBitrate, root);
 		createAndAppendElement("bitrate_cap", this.videoBitrateCap, root);
 		createAndAppendElement("buffer_size", this.bufferSize, root);
-		createAndAppendElement("onepass", this.onePass, root);
 		createAndAppendElement("deinterlace", this.deinterlace.name(), root);
 		createAndAppendElement("max_frame_rate", this.maxFrameRate, root);
 		createAndAppendElement("frame_rate", this.frameRate, root);
@@ -143,6 +139,11 @@ public class ZencoderOutput {
 		createAndAppendElement("keyframe_interval", this.keyFrameInterval, root);
 		createAndAppendElement("rotate", this.rotate, root);
 		createAndAppendElement("skip_video", this.skipVideo, root);
+		if (!this.denoise.equals(ZencoderDenoiseFilter.NONE))
+			createAndAppendElement("denoise",
+					this.denoise.name().toLowerCase(), root);
+		createAndAppendElement("deblock", this.deblock, root);
+		createAndAppendElement("autolevel", this.autolevel, root);
 
 		createAndAppendElement("audio_codec", this.audioCodec.name(), root);
 		createAndAppendElement("audio_bitrate", this.audioBitrate, root);
@@ -245,7 +246,7 @@ public class ZencoderOutput {
 	}
 
 	public String getBasetURL() {
-		return basetURL;
+		return baseURL;
 	}
 
 	public String getFilename() {
@@ -306,10 +307,6 @@ public class ZencoderOutput {
 
 	public int getBufferSize() {
 		return bufferSize;
-	}
-
-	public boolean isOnePass() {
-		return onePass;
 	}
 
 	public ZencoderDeinterlace getDeinterlace() {
@@ -377,7 +374,7 @@ public class ZencoderOutput {
 	}
 
 	public void setBasetURL(String basetURL) {
-		this.basetURL = basetURL;
+		this.baseURL = basetURL;
 	}
 
 	public void setFilename(String filename) {
@@ -551,10 +548,6 @@ public class ZencoderOutput {
 		this.aspectMode = aspectMode;
 	}
 
-	public void setOnePass(boolean onePass) {
-		this.onePass = onePass;
-	}
-
 	public void setDeinterlace(ZencoderDeinterlace deinterlace) {
 		this.deinterlace = deinterlace;
 	}
@@ -603,6 +596,18 @@ public class ZencoderOutput {
 		this.watermarks.remove(item);
 	}
 
+	public void setAutolevel(boolean autolevel) {
+		this.autolevel = autolevel;
+	}
+
+	public void setDeblock(boolean deblock) {
+		this.deblock = deblock;
+	}
+
+	public void setDenoise(ZencoderDenoiseFilter denoise) {
+		this.denoise = denoise;
+	}
+
 	public String toString() {
 		Element elem;
 		Document document;
@@ -619,24 +624,8 @@ public class ZencoderOutput {
 		}
 		if (elem != null) {
 			document.appendChild(elem);
-			StringWriter stringWriter = new StringWriter();
-			StreamResult streamResult = new StreamResult(stringWriter);
-			TransformerFactory transformerFactory = TransformerFactory
-					.newInstance();
-			Transformer transformer;
 			try {
-				transformer = transformerFactory.newTransformer();
-
-				transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-				transformer.setOutputProperty(
-						"{http://xml.apache.org/xslt}indent-amount", "2");
-				transformer.setOutputProperty(OutputKeys.METHOD, "xml");
-				transformer.transform(
-						new DOMSource(document.getDocumentElement()),
-						streamResult);
-				return stringWriter.toString();
-			} catch (TransformerConfigurationException e) {
-				throw new RuntimeException(e);
+				return XmlUtility.xmltoString(document);
 			} catch (TransformerException e) {
 				throw new RuntimeException(e);
 			}

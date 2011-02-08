@@ -78,7 +78,9 @@ public class ZencoderClient implements IZencoderClient {
 			}
 			return response;
 		} catch (ParserConfigurationException e) {
+			LOGGER.error("Parser threw Exception", e);
 		} catch (XPathExpressionException e) {
+			LOGGER.error("XPath threw Exception", e);
 		}
 		return null;
 	}

@@ -16,26 +16,20 @@
 
 package de.bitzeche.video.transcoding.zencoder.job;
 
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 import de.bitzeche.video.transcoding.zencoder.enums.ZencoderThumbnailFormat;
+import de.bitzeche.video.transcoding.zencoder.util.XmlUtility;
 
 public class ZencoderThumbnail {
 
@@ -206,24 +200,8 @@ public class ZencoderThumbnail {
 		}
 		if (elem != null) {
 			document.appendChild(elem);
-			StringWriter stringWriter = new StringWriter();
-			StreamResult streamResult = new StreamResult(stringWriter);
-			TransformerFactory transformerFactory = TransformerFactory
-					.newInstance();
-			Transformer transformer;
 			try {
-				transformer = transformerFactory.newTransformer();
-
-				transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-				transformer.setOutputProperty(
-						"{http://xml.apache.org/xslt}indent-amount", "2");
-				transformer.setOutputProperty(OutputKeys.METHOD, "xml");
-				transformer.transform(
-						new DOMSource(document.getDocumentElement()),
-						streamResult);
-				return stringWriter.toString();
-			} catch (TransformerConfigurationException e) {
-				throw new RuntimeException(e);
+				return XmlUtility.xmltoString(document);
 			} catch (TransformerException e) {
 				throw new RuntimeException(e);
 			}

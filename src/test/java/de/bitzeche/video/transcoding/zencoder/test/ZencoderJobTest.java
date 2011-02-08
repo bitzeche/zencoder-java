@@ -33,7 +33,7 @@ public class ZencoderJobTest {
 		String expected = ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
 				+ "<api-request>" + "<input>http://testpath/</input>"
 				+ "<download_connections>5</download_connections>"
-				+ "<test>0</test>" + "</api-request>").replaceAll(" ", "");
+				+ "<test>0</test><private>0</private>" + "</api-request>").replaceAll(" ", "");
 		Assert.assertEquals(doc, expected);
 	}
 	
@@ -43,10 +43,11 @@ public class ZencoderJobTest {
 		
 		job.setDownloadConnections(10);
 		job.setTest(true);
+		job.setPrivate(true);
 		job.setZencoderRegion(ZencoderRegion.ASIA);
 		
 		String doc = StringUtil.stripSpacesAndLineBreaksFrom(job.toString());
-		String expected = ("<?xmlversion=\"1.0\"encoding=\"UTF-8\"?><api-request><input>http://testpath/</input><region>asia</region><download_connections>10</download_connections><test>1</test></api-request>");
+		String expected = ("<?xmlversion=\"1.0\"encoding=\"UTF-8\"?><api-request><input>http://testpath/</input><region>asia</region><download_connections>10</download_connections><test>1</test><private>1</private></api-request>");
 		Assert.assertEquals(doc, expected);
 //		System.out.println(doc);
 	}
