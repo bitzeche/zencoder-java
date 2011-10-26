@@ -91,6 +91,10 @@ public class ZencoderOutput {
 	private boolean isPublic = false;
 	private List<ZencoderS3AccessControlItem> aclItems = new ArrayList<ZencoderS3AccessControlItem>();
 
+	public ZencoderOutput(String label) {
+		this.label = label;
+	}
+
 	public ZencoderOutput(String label, String baseUrl, String filename) {
 		this.filename = filename;
 		this.baseURL = baseUrl;
@@ -103,12 +107,6 @@ public class ZencoderOutput {
 	}
 
 	public Element createXML(Document document) {
-		if (this.baseURL == null && this.outputURL == null
-				&& this.filename == null) {
-			throw new IllegalArgumentException(
-					"We need don't know where to store this");
-		}
-
 		this.xmlDocument = document;
 		Element root = createElement("ouput");
 
