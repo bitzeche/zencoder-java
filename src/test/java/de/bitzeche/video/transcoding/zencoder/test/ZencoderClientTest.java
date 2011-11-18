@@ -19,11 +19,12 @@ package de.bitzeche.video.transcoding.zencoder.test;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.testng.Assert;
+import org.testng.AssertJUnit;
 import org.testng.annotations.Test;
 
 import de.bitzeche.video.transcoding.zencoder.IZencoderClient;
 import de.bitzeche.video.transcoding.zencoder.ZencoderClient;
+import de.bitzeche.video.transcoding.zencoder.enums.ZencoderAPIVersion;
 import de.bitzeche.video.transcoding.zencoder.enums.ZencoderDenoiseFilter;
 import de.bitzeche.video.transcoding.zencoder.enums.ZencoderS3AccessControlRight;
 import de.bitzeche.video.transcoding.zencoder.job.ZencoderJob;
@@ -35,15 +36,30 @@ import de.bitzeche.video.transcoding.zencoder.job.ZencoderWatermark;
 
 public class ZencoderClientTest {
 
-	IZencoderClient client;
 	String API_KEY = "";
 
-	public ZencoderClientTest() {
-		client = new ZencoderClient(API_KEY);
+	public IZencoderClient createClient(ZencoderAPIVersion apiVersion) {
+		return new ZencoderClient(API_KEY, apiVersion);
+	}
+
+	@Test
+	public void constructor_V1() {
+		createClient(ZencoderAPIVersion.API_V1);
+	}
+
+	@Test(expectedExceptions = IllegalArgumentException.class)
+	public void constructor_V2() {
+		createClient(ZencoderAPIVersion.API_V2);
+	}
+
+	@Test
+	public void constructor_DEV() {
+		createClient(ZencoderAPIVersion.API_DEV);
 	}
 
 	@Test
 	public void createJob() {
+
 		ZencoderWatermark watermark = new ZencoderWatermark("http://url/");
 		ZencoderWatermark watermark2 = new ZencoderWatermark("http://url/");
 		ZencoderNotification notif = new ZencoderNotification("test@test.de");
@@ -63,7 +79,7 @@ public class ZencoderClientTest {
 		out.addNotification(notif2);
 		out.addWatermark(watermark);
 		out.addWatermark(watermark2);
-		
+
 		out2.setDeblock(true);
 		out2.setAutolevel(true);
 		out2.setDenoise(ZencoderDenoiseFilter.WEAK);
@@ -72,18 +88,19 @@ public class ZencoderClientTest {
 		job.addOutput(out2);
 		job.setPrivate(true);
 
-		String doc = StringUtil.stripSpacesAndLineBreaksFrom( job );
+		String doc = StringUtil.stripSpacesAndLineBreaksFrom(job);
 		String expected = "<?xmlversion=\"1.0\"encoding=\"UTF-8\"?><api-request><input>http://test4/</input><download_connections>5</download_connections><test>0</test><private>1</private><outputstype=\"array\"><ouput><label>test</label><url>se://test/</url><speed>4</speed><public>0</public><video_codec>h264</video_codec><upscale>0</upscale><deinterlace>detect</deinterlace><skip_video>0</skip_video><deblock>0</deblock><autolevel>0</autolevel><audio_codec>aac</audio_codec><skip_audio>0</skip_audio><watermarks><watermark><url>http://url/</url><x>-10</x><y>-10</y></watermark><watermark><url>http://url/</url><x>-10</x><y>-10</y></watermark></watermarks><access-controls><access_control><grantee>test</grantee><permissions><permission>FULL_CONTROL</permission><permission>READ</permission></permissions></access_control></access-controls><notificationstype=\"array\"><notification><url>test@test.de</url></notification><notification><url>test2@test.de</url></notification></notifications></ouput><ouput><label>test2</label><url>se://test2/</url><speed>4</speed><public>0</public><video_codec>h264</video_codec><upscale>0</upscale><deinterlace>detect</deinterlace><skip_video>0</skip_video><denoise>weak</denoise><deblock>1</deblock><autolevel>1</autolevel><audio_codec>aac</audio_codec><skip_audio>0</skip_audio></ouput></outputs></api-request>";
 		// System.out.println(doc);
-		Assert.assertEquals(doc, expected);
+		AssertJUnit.assertEquals(doc, expected);
 	}
 
 	@Test
-	public void deleteTest() {
+	public void deleteTest_V1() {
+		IZencoderClient client = createClient(ZencoderAPIVersion.API_V1);
 		ZencoderJob job = new ZencoderJob("");
 		job.setJobId(439422);
 		boolean res = client.deleteJob(job);
 		if (res)
-			Assert.fail("Shouldn't suceed deleting Job");
+			AssertJUnit.fail("Shouldn't suceed deleting Job");
 	}
 }
