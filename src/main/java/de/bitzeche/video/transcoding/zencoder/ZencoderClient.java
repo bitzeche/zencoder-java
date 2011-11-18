@@ -49,17 +49,17 @@ public class ZencoderClient implements IZencoderClient {
 	private static final Logger LOGGER = LoggerFactory
 			.getLogger(ZencoderClient.class);
 	private ApacheHttpClient httpClient;
-	private final String ZENCODER_API_BASE_URL;
-	private XPath xPath;
-	private String ZENCODER_API_KEY;
+	private final String zencoderAPIBaseUrl;
+	private final String zencoderAPIKey;
 	private final ZencoderAPIVersion zencoderAPIVersion;
+	private XPath xPath;
 
 	public ZencoderClient(String zencoderApiKey) {
 		this(zencoderApiKey, ZencoderAPIVersion.API_V1);
 	}
 
 	public ZencoderClient(String zencoderApiKey, ZencoderAPIVersion apiVersion) {
-		this.ZENCODER_API_KEY = zencoderApiKey;
+		this.zencoderAPIKey = zencoderApiKey;
 		if (ZencoderAPIVersion.API_V2.equals(apiVersion)) {
 			throw new IllegalArgumentException("API Version 2 is not supported at the moment");
 		} else if(ZencoderAPIVersion.API_DEV.equals(apiVersion)) {
@@ -71,7 +71,7 @@ public class ZencoderClient implements IZencoderClient {
 		httpClient = ApacheHttpClient.create();
 		httpClient.setFollowRedirects(true);
 		xPath = XPathFactory.newInstance().newXPath();
-		ZENCODER_API_BASE_URL = zencoderAPIVersion.getBaseUrl();
+		zencoderAPIBaseUrl = zencoderAPIVersion.getBaseUrl();
 	}
 
 	@Override
@@ -83,7 +83,7 @@ public class ZencoderClient implements IZencoderClient {
 				LOGGER.error("Got no XML from Job");
 			}
 			Element apikey = data.createElement("api_key");
-			apikey.setTextContent(ZENCODER_API_KEY);
+			apikey.setTextContent(zencoderAPIKey);
 			data.getDocumentElement().appendChild(apikey);
 			Document response = sendPostRequest(
 					"https://app.zencoder.com/api/jobs?format=xml", data);
@@ -110,8 +110,8 @@ public class ZencoderClient implements IZencoderClient {
 	}
 
 	public boolean resubmitJob(int id) {
-		String url = ZENCODER_API_BASE_URL + "jobs/" + id
-				+ "/resubmit?api_key=" + ZENCODER_API_KEY;
+		String url = zencoderAPIBaseUrl + "jobs/" + id
+				+ "/resubmit?api_key=" + zencoderAPIKey;
 		ClientResponse res = sendGetRequest(url);
 		return (res.getStatus() == 200);
 	}
@@ -125,8 +125,8 @@ public class ZencoderClient implements IZencoderClient {
 	}
 
 	public boolean cancelJob(int id) {
-		String url = ZENCODER_API_BASE_URL + "jobs/" + id + "/cancel?api_key="
-				+ ZENCODER_API_KEY;
+		String url = zencoderAPIBaseUrl + "jobs/" + id + "/cancel?api_key="
+				+ zencoderAPIKey;
 		ClientResponse res = sendGetRequest(url);
 		return (res.getStatus() == 200);
 	}
@@ -140,8 +140,8 @@ public class ZencoderClient implements IZencoderClient {
 	}
 
 	public boolean deleteJob(int id) {
-		String url = ZENCODER_API_BASE_URL + "jobs/" + id + "?api_key="
-				+ ZENCODER_API_KEY;
+		String url = zencoderAPIBaseUrl + "jobs/" + id + "?api_key="
+				+ zencoderAPIKey;
 		LOGGER.debug("calling to delete job: {}", url);
 		WebResource webResource = httpClient.resource(url);
 		ClientResponse res = webResource.delete(ClientResponse.class);
