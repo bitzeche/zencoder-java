@@ -60,12 +60,10 @@ public class ZencoderClient implements IZencoderClient {
 
 	public ZencoderClient(String zencoderApiKey, ZencoderAPIVersion apiVersion) {
 		this.zencoderAPIKey = zencoderApiKey;
-		if (ZencoderAPIVersion.API_V2.equals(apiVersion)) {
-			throw new IllegalArgumentException("API Version 2 is not supported at the moment");
-		} else if(ZencoderAPIVersion.API_DEV.equals(apiVersion)) {
+		if (ZencoderAPIVersion.API_DEV.equals(apiVersion)) {
 			LOGGER.warn("!!! Using development version of zencoder API !!!");
 		}
-		
+
 		this.zencoderAPIVersion = apiVersion;
 
 		httpClient = ApacheHttpClient.create();
@@ -110,10 +108,10 @@ public class ZencoderClient implements IZencoderClient {
 	}
 
 	public boolean resubmitJob(int id) {
-		String url = zencoderAPIBaseUrl + "jobs/" + id
-				+ "/resubmit?api_key=" + zencoderAPIKey;
-		ClientResponse res = sendGetRequest(url);
-		return (res.getStatus() == 200);
+		String url = zencoderAPIBaseUrl + "jobs/" + id + "/resubmit?api_key="
+				+ zencoderAPIKey;
+		ClientResponse res = sendPutRequest(url);
+		return (res.getStatus() == 200 || res.getStatus() == 204);
 	}
 
 	public boolean cancelJob(ZencoderJob job) {
@@ -125,10 +123,17 @@ public class ZencoderClient implements IZencoderClient {
 	}
 
 	public boolean cancelJob(int id) {
-		String url = zencoderAPIBaseUrl + "jobs/" + id + "/cancel?api_key="
-				+ zencoderAPIKey;
-		ClientResponse res = sendGetRequest(url);
-		return (res.getStatus() == 200);
+		String url = zencoderAPIBaseUrl + "jobs/" + id
+				+ "/cancel.json?api_key=" + zencoderAPIKey;
+		ClientResponse res = sendPutRequest(url);
+		int responseStatus = res.getStatus();
+		if (responseStatus == 200 || responseStatus == 204) {
+			return true;
+		} else if (responseStatus == 409) {
+			LOGGER.debug("Already finished job {}", id);
+			return true;
+		}
+		return false;
 	}
 
 	public boolean deleteJob(ZencoderJob job) {
@@ -139,19 +144,30 @@ public class ZencoderClient implements IZencoderClient {
 		return false;
 	}
 
+	@Deprecated
 	public boolean deleteJob(int id) {
-		String url = zencoderAPIBaseUrl + "jobs/" + id + "?api_key="
-				+ zencoderAPIKey;
-		LOGGER.debug("calling to delete job: {}", url);
-		WebResource webResource = httpClient.resource(url);
-		ClientResponse res = webResource.delete(ClientResponse.class);
-		return (res.getStatus() == 200);
+		throw new IllegalArgumentException("Deleting jobs is not supported at the moment. Use cancel instead.");
+		
+//		String url = zencoderAPIBaseUrl + "jobs/" + id + "?api_key="
+//				+ zencoderAPIKey;
+//		LOGGER.debug("calling to delete job: {}", url);
+//		WebResource webResource = httpClient.resource(url);
+//		ClientResponse response = webResource.delete(ClientResponse.class);
+//		int responseStatus = response.getStatus();
+//		return (responseStatus == 200);
 	}
 
 	protected ClientResponse sendGetRequest(String url) {
 		LOGGER.debug("calling: {}", url);
 		WebResource webResource = httpClient.resource(url);
 		return webResource.get(ClientResponse.class);
+
+	}
+
+	protected ClientResponse sendPutRequest(String url) {
+		LOGGER.debug("calling: {}", url);
+		WebResource webResource = httpClient.resource(url);
+		return webResource.put(ClientResponse.class);
 
 	}
 

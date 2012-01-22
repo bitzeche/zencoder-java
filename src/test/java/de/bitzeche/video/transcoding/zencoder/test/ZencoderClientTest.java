@@ -17,15 +17,19 @@
 package de.bitzeche.video.transcoding.zencoder.test;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import org.testng.AssertJUnit;
+import org.testng.Assert;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import de.bitzeche.video.transcoding.zencoder.IZencoderClient;
 import de.bitzeche.video.transcoding.zencoder.ZencoderClient;
 import de.bitzeche.video.transcoding.zencoder.enums.ZencoderAPIVersion;
 import de.bitzeche.video.transcoding.zencoder.enums.ZencoderDenoiseFilter;
+import de.bitzeche.video.transcoding.zencoder.enums.ZencoderRegion;
 import de.bitzeche.video.transcoding.zencoder.enums.ZencoderS3AccessControlRight;
 import de.bitzeche.video.transcoding.zencoder.job.ZencoderJob;
 import de.bitzeche.video.transcoding.zencoder.job.ZencoderNotification;
@@ -36,29 +40,29 @@ import de.bitzeche.video.transcoding.zencoder.job.ZencoderWatermark;
 
 public class ZencoderClientTest {
 
-	String API_KEY = "";
+	private static String API_KEY = "";
+	private static final ZencoderRegion ZENCODER_REGION = ZencoderRegion.EUROPE;
+	private static final String TEST_VIDEO_URL = "http://ca.bitzeche.de/big_buck_bunny_720p_h264.mov";
+	Map<ZencoderAPIVersion, Integer> jobMap = new HashMap<ZencoderAPIVersion, Integer>();
+
+	public ZencoderClientTest() {
+		if ("".equals(API_KEY)) {
+			throw new IllegalArgumentException(
+					"We need an API key to run these tests");
+		}
+	}
 
 	public IZencoderClient createClient(ZencoderAPIVersion apiVersion) {
 		return new ZencoderClient(API_KEY, apiVersion);
 	}
 
-	@Test
-	public void constructor_V1() {
-		createClient(ZencoderAPIVersion.API_V1);
-	}
-
-	@Test(expectedExceptions = IllegalArgumentException.class)
-	public void constructor_V2() {
-		createClient(ZencoderAPIVersion.API_V2);
+	@Test(dataProvider = "ApiVersionDS")
+	public void constructor(ApiVersionProvider provider) {
+		createClient(provider.getApiVersion());
 	}
 
 	@Test
-	public void constructor_DEV() {
-		createClient(ZencoderAPIVersion.API_DEV);
-	}
-
-	@Test
-	public void createJob() {
+	public void createJobAndCheckXML() {
 
 		ZencoderWatermark watermark = new ZencoderWatermark("http://url/");
 		ZencoderWatermark watermark2 = new ZencoderWatermark("http://url/");
@@ -91,16 +95,76 @@ public class ZencoderClientTest {
 		String doc = StringUtil.stripSpacesAndLineBreaksFrom(job);
 		String expected = "<?xmlversion=\"1.0\"encoding=\"UTF-8\"?><api-request><input>http://test4/</input><download_connections>5</download_connections><test>0</test><private>1</private><outputstype=\"array\"><ouput><label>test</label><url>se://test/</url><speed>4</speed><public>0</public><video_codec>h264</video_codec><upscale>0</upscale><deinterlace>detect</deinterlace><skip_video>0</skip_video><deblock>0</deblock><autolevel>0</autolevel><audio_codec>aac</audio_codec><skip_audio>0</skip_audio><watermarks><watermark><url>http://url/</url><x>-10</x><y>-10</y></watermark><watermark><url>http://url/</url><x>-10</x><y>-10</y></watermark></watermarks><access-controls><access_control><grantee>test</grantee><permissions><permission>FULL_CONTROL</permission><permission>READ</permission></permissions></access_control></access-controls><notificationstype=\"array\"><notification><url>test@test.de</url></notification><notification><url>test2@test.de</url></notification></notifications></ouput><ouput><label>test2</label><url>se://test2/</url><speed>4</speed><public>0</public><video_codec>h264</video_codec><upscale>0</upscale><deinterlace>detect</deinterlace><skip_video>0</skip_video><denoise>weak</denoise><deblock>1</deblock><autolevel>1</autolevel><audio_codec>aac</audio_codec><skip_audio>0</skip_audio></ouput></outputs></api-request>";
 		// System.out.println(doc);
-		AssertJUnit.assertEquals(doc, expected);
+		Assert.assertEquals(doc, expected);
 	}
 
-	@Test
-	public void deleteTest_V1() {
-		IZencoderClient client = createClient(ZencoderAPIVersion.API_V1);
+	@Test(dataProvider = "ApiVersionDS")
+	public void createAndCancelJobTest(ApiVersionProvider provider) {
+
+		ZencoderAPIVersion apiVersion = provider.getApiVersion();
+		IZencoderClient client = createClient(apiVersion);
+		ZencoderJob job = new ZencoderJob(TEST_VIDEO_URL);
+		job.setZencoderRegion(ZENCODER_REGION);
+		job.setTest(true);
+
+		client.createJob(job);
+		int jobId = job.getJobId();
+		Assert.assertTrue(jobId >= 0);
+
+		jobMap.put(apiVersion, jobId);
+
+		boolean canceled = client.cancelJob(job);
+		Assert.assertTrue(canceled);
+	}
+
+	@Test(dataProvider = "ApiVersionDS", dependsOnMethods = "createAndCancelJobTest")
+	public void resubmitAndCancelJobTest(ApiVersionProvider provider) {
+
+		ZencoderAPIVersion apiVersion = provider.getApiVersion();
+		IZencoderClient client = createClient(apiVersion);
 		ZencoderJob job = new ZencoderJob("");
-		job.setJobId(439422);
-		boolean res = client.deleteJob(job);
-		if (res)
-			AssertJUnit.fail("Shouldn't suceed deleting Job");
+		job.setJobId(jobMap.get(apiVersion));
+
+		boolean resubmitted = client.resubmitJob(job);
+
+		Assert.assertTrue(resubmitted);
+
+		boolean canceled = client.cancelJob(job);
+		Assert.assertTrue(canceled);
+	}
+
+	@Test(dataProvider = "ApiVersionDS", dependsOnMethods = "resubmitAndCancelJobTest", expectedExceptions = IllegalArgumentException.class)
+	public void deleteTest(ApiVersionProvider provider) {
+		ZencoderAPIVersion apiVersion = provider.getApiVersion();
+		IZencoderClient client = createClient(apiVersion);
+		ZencoderJob job = new ZencoderJob("");
+		job.setJobId(jobMap.get(apiVersion));
+		client.deleteJob(job);
+	}
+
+	abstract class ApiVersionProvider {
+		public ZencoderAPIVersion getApiVersion() {
+			return null;
+		}
+	}
+
+	@DataProvider(name = "ApiVersionDS")
+	public Object[][] getApiVersion() {
+		return new Object[][] { new Object[] { new ApiVersionProvider() {
+			@Override
+			public ZencoderAPIVersion getApiVersion() {
+				return ZencoderAPIVersion.API_V1;
+			}
+		} }, new Object[] { new ApiVersionProvider() {
+			@Override
+			public ZencoderAPIVersion getApiVersion() {
+				return ZencoderAPIVersion.API_V2;
+			}
+		} }, new Object[] { new ApiVersionProvider() {
+			@Override
+			public ZencoderAPIVersion getApiVersion() {
+				return ZencoderAPIVersion.API_DEV;
+			}
+		} } };
 	}
 }

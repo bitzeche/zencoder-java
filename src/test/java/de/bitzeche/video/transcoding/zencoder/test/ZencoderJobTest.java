@@ -49,7 +49,6 @@ public class ZencoderJobTest {
 		String doc = StringUtil.stripSpacesAndLineBreaksFrom(job.toString());
 		String expected = ("<?xmlversion=\"1.0\"encoding=\"UTF-8\"?><api-request><input>http://testpath/</input><region>asia</region><download_connections>10</download_connections><test>1</test><private>1</private></api-request>");
 		Assert.assertEquals(doc, expected);
-//		System.out.println(doc);
 	}
 	
 }
