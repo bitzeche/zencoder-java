@@ -68,6 +68,7 @@
 	<properties>
 		<target.dir>target</target.dir>
 		<org.slf4j.version>1.6.1</org.slf4j.version>
+        <current.year>2012</current.year>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -131,7 +132,7 @@
 					<header>header.txt</header>
 					<properties>
 						<owner>Bitzeche GmbH</owner>
-						<year>${project.inceptionYear}</year>
+						<year>${current.year}</year>
 						<email>info@bitzeche.de</email>
 					</properties>
 				</configuration>
