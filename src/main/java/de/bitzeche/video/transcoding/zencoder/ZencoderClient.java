@@ -42,6 +42,7 @@ import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.client.apache.ApacheHttpClient;
 
 import de.bitzeche.video.transcoding.zencoder.enums.ZencoderAPIVersion;
+import de.bitzeche.video.transcoding.zencoder.enums.ZencoderNotificationJobState;
 import de.bitzeche.video.transcoding.zencoder.job.ZencoderJob;
 
 public class ZencoderClient implements IZencoderClient {
@@ -84,7 +85,7 @@ public class ZencoderClient implements IZencoderClient {
 			apikey.setTextContent(zencoderAPIKey);
 			data.getDocumentElement().appendChild(apikey);
 			Document response = sendPostRequest(
-					"https://app.zencoder.com/api/jobs?format=xml", data);
+					zencoderAPIBaseUrl + "jobs?format=xml", data);
 			String id = (String) xPath.evaluate("/api-response/job/id",
 					response, XPathConstants.STRING);
 			if (id != null) {
@@ -99,6 +100,29 @@ public class ZencoderClient implements IZencoderClient {
 		return null;
 	}
 
+	public ZencoderNotificationJobState jobProgress(ZencoderJob job) {
+		return jobProgress(job.getJobId());
+	}
+	
+	public ZencoderNotificationJobState jobProgress(int id) {
+		String url = zencoderAPIBaseUrl + "jobs/" + id
+				+ "/progress.xml?api_key=" + zencoderAPIKey;
+		WebResource webResource = httpClient.resource(url);
+		Document response = webResource.get(Document.class);
+		String stateString = null;
+		try {
+			stateString = (String) xPath.evaluate("/api-response/state",
+				response, XPathConstants.STRING);
+			return ZencoderNotificationJobState.getJobState(stateString);
+		} catch (IllegalArgumentException ex) {
+			LOGGER.error("Unable to find state for string '{}'", stateString);
+		} catch (XPathExpressionException e) {
+			LOGGER.error("XPath threw Exception", e);
+		}
+		return null;
+	}
+
+
 	public boolean resubmitJob(ZencoderJob job) {
 		int id;
 		if ((id = job.getJobId()) != 0) {
@@ -111,7 +135,14 @@ public class ZencoderClient implements IZencoderClient {
 		String url = zencoderAPIBaseUrl + "jobs/" + id + "/resubmit?api_key="
 				+ zencoderAPIKey;
 		ClientResponse res = sendPutRequest(url);
-		return (res.getStatus() == 200 || res.getStatus() == 204);
+		int responseStatus = res.getStatus();
+		if (responseStatus == 200 || responseStatus == 204) {
+			return true;
+		} else if (responseStatus == 409) {
+			LOGGER.debug("Already finished job {}", id);
+			return true;
+		}
+		return false;
 	}
 
 	public boolean cancelJob(ZencoderJob job) {

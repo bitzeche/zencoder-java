@@ -18,6 +18,7 @@ package de.bitzeche.video.transcoding.zencoder;
 
 import org.w3c.dom.Document;
 
+import de.bitzeche.video.transcoding.zencoder.enums.ZencoderNotificationJobState;
 import de.bitzeche.video.transcoding.zencoder.job.ZencoderJob;
 
 
@@ -30,12 +31,55 @@ public interface IZencoderClient {
 	 */
 	public Document createJob(ZencoderJob job);
 	
+	/**
+	 * Send a jobProgress request for a job.
+	 * @param jobId ID for the requested job.
+	 * @return State of job, or null if unable to parse response.
+	 */
+	public ZencoderNotificationJobState jobProgress(int jobId);
+	
+	/**
+	 * Send a jobProgress request for a job.
+	 * @param job
+	 * @return State of job, or null if unable to parse response.
+	 */
+	public ZencoderNotificationJobState jobProgress(ZencoderJob job);
+	
+	/**
+	 * Send a resubmit request for a job.
+	 * @param jobId ID for the requested job.
+	 * @return true if job was resubmitted successfully.  
+	 * Attempting to resubmit an already finished job returns false. 
+	 */
 	public boolean resubmitJob(int jobId);
+	
+	/**
+	 * Send a resubmit request for a job.
+	 * @param job
+	 * @return true if job was resubmitted successfully.  
+	 * Attempting to resubmit an already finished job returns false. 
+	 */
 	public boolean resubmitJob(ZencoderJob job);
 
+	/**
+	 * Send a cancel request for a job.
+	 * @param jobId ID for the requested job.
+	 * @return true if job was cancelled successfully.  
+	 * Attempting to cancel an already finished job returns false. 
+	 */
 	public boolean cancelJob(int jobId);
+
+	/**
+	 * Send a cancel request for a job.
+	 * @param job
+	 * @return true if job was cancelled successfully.  
+	 * Attempting to cancel an already finished job returns false. 
+	 */
 	public boolean cancelJob(ZencoderJob job);
 
+	@Deprecated
 	public boolean deleteJob(int jobId);
+	
+	@Deprecated
 	public boolean deleteJob(ZencoderJob job);
 }
