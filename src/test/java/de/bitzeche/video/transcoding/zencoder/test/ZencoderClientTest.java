@@ -40,7 +40,7 @@ import de.bitzeche.video.transcoding.zencoder.job.ZencoderWatermark;
 
 public class ZencoderClientTest {
 
-	private static String API_KEY = "";
+	private static String API_KEY = "6ff283d80d91b0b6221d6c19d47fc7a0";
 	private static final ZencoderRegion ZENCODER_REGION = ZencoderRegion.EUROPE;
 	private static final String TEST_VIDEO_URL = "http://ca.bitzeche.de/big_buck_bunny_720p_h264.mov";
 	Map<ZencoderAPIVersion, Integer> jobMap = new HashMap<ZencoderAPIVersion, Integer>();
