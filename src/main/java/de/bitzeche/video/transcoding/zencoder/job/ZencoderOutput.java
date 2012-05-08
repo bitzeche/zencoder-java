@@ -51,6 +51,7 @@ public class ZencoderOutput {
 	private int speed = 4;
 	private String startClip;
 	private String clipLength;
+	private Integer id;
 
 	/*
 	 * Video
@@ -108,8 +109,12 @@ public class ZencoderOutput {
 
 	public Element createXML(Document document) {
 		this.xmlDocument = document;
-		Element root = createElement("ouput");
+		Element root = createElement("output");
 
+		if (id != null)
+		{
+			createAndAppendElement("id", this.id, root);
+		}
 		createAndAppendElement("label", this.label, root);
 		createAndAppendElement("url", this.outputURL, root);
 		createAndAppendElement("base_url", this.baseURL, root);
@@ -223,6 +228,7 @@ public class ZencoderOutput {
 
 	protected void createAndAppendElement(String name, int value,
 			Element rootNode) {
+//		if (value != null && value != 0) {
 		if (value != 0) {
 			createAndAppendElement(name, ("" + value), rootNode);
 		}
@@ -253,6 +259,10 @@ public class ZencoderOutput {
 
 	public String getLabel() {
 		return label;
+	}
+
+	public Integer getId() {
+		return id;
 	}
 
 	public int getSpeed() {
@@ -377,6 +387,10 @@ public class ZencoderOutput {
 
 	public void setFilename(String filename) {
 		this.filename = filename;
+	}
+
+	public void setId(Integer id) {
+		this.id = id;
 	}
 
 	public void setZencoderVideoCodec(ZencoderVideoCodec zencoderVideoCodec) {
