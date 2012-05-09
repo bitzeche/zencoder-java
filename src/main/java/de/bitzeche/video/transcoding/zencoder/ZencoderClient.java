@@ -17,6 +17,8 @@
 package de.bitzeche.video.transcoding.zencoder;
 
 import java.io.StringWriter;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
 import javax.xml.parsers.ParserConfigurationException;
@@ -35,6 +37,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
@@ -44,6 +48,7 @@ import com.sun.jersey.client.apache.ApacheHttpClient;
 import de.bitzeche.video.transcoding.zencoder.enums.ZencoderAPIVersion;
 import de.bitzeche.video.transcoding.zencoder.enums.ZencoderNotificationJobState;
 import de.bitzeche.video.transcoding.zencoder.job.ZencoderJob;
+import de.bitzeche.video.transcoding.zencoder.job.ZencoderOutput;
 
 public class ZencoderClient implements IZencoderClient {
 
@@ -73,6 +78,79 @@ public class ZencoderClient implements IZencoderClient {
 		zencoderAPIBaseUrl = zencoderAPIVersion.getBaseUrl();
 	}
 
+	/*
+	 * Typical response:
+<?xml version="1.0" encoding="UTF-8"?>
+<api-response>
+  <job>
+    <test type="boolean">true</test>
+    <outputs type="array">
+      <output>
+        <url>http://audio-bucket.jagtest.spotnote.s3.amazonaws.com/ApU001TestUserAx001.m4a</url>
+        <label>test_aac</label>
+        <id type="integer">29345822</id>
+      </output>
+    </outputs>
+    <id type="integer">17941347</id>
+  </job>
+</api-response>
+	 * 
+	 */
+	
+	
+	private Integer findIdFromOutputNode(Node output) throws XPathExpressionException
+	{
+		Double idDouble = (Double)xPath.evaluate("output/id", output, XPathConstants.NUMBER);
+		return idDouble == null ? null : idDouble.intValue();
+	}
+	
+	/**
+	 * Complete output IDs from response.
+	 * @param job
+	 * @param response
+	 */
+	private void completeJobInfo(ZencoderJob job, Document response) {
+		try {
+			NodeList outputs = (NodeList) xPath.evaluate("/api-response/job/outputs",
+				response, XPathConstants.NODESET);
+			if (job.getOutputs().size() == 1)
+			{
+				Integer id = findIdFromOutputNode(outputs.item(0));
+				if (id != null)	
+				{
+					job.getOutputs().get(0).setId(id);
+				}
+			}
+			else  
+			{
+				//try via labels
+				Map<String, Integer> ids = new HashMap<String, Integer>(); 
+				int outputSize = outputs.getLength();
+				for (int i=0; i<outputSize; i++) 
+				{
+					String label = (String) xPath.evaluate("output/label", outputs.item(i), XPathConstants.STRING);
+					if (label != null && !label.isEmpty()) 
+					{
+						int id = findIdFromOutputNode(outputs.item(i));
+						ids.put(label, new Integer(id));
+					}
+				}
+				for (ZencoderOutput zcOutput : job.getOutputs())
+				{
+					Integer foundId = ids.get(zcOutput.getLabel());
+					if (foundId != null)
+					{
+						zcOutput.setId(foundId);
+					}
+				}
+			}
+			
+		} catch (XPathExpressionException e) {
+			LOGGER.error("XPath threw Exception", e);
+		}
+	}
+	
+	
 	@Override
 	public Document createJob(ZencoderJob job) {
 		Document data;
@@ -91,6 +169,7 @@ public class ZencoderClient implements IZencoderClient {
 			if (id != null) {
 				job.setJobId(Integer.parseInt(id));
 			}
+			completeJobInfo(job, response);
 			return response;
 		} catch (ParserConfigurationException e) {
 			LOGGER.error("Parser threw Exception", e);
@@ -105,8 +184,13 @@ public class ZencoderClient implements IZencoderClient {
 	}
 	
 	public ZencoderNotificationJobState jobProgress(int id) {
+		if (zencoderAPIVersion != ZencoderAPIVersion.API_V2) {
+			LOGGER.warn("jobProgress is only available for API v2.  Returning null.");
+			return null;
+		}
 		String url = zencoderAPIBaseUrl + "jobs/" + id
 				+ "/progress.xml?api_key=" + zencoderAPIKey;
+		System.out.println("Calling job state url: " + url);
 		WebResource webResource = httpClient.resource(url);
 		Document response = webResource.get(Document.class);
 		String stateString = null;
@@ -122,6 +206,17 @@ public class ZencoderClient implements IZencoderClient {
 		return null;
 	}
 
+	public Document getJobDetails(ZencoderJob job) {
+		return getJobDetails(job.getJobId());
+	}
+	
+	public Document getJobDetails(int id) {
+		String url = zencoderAPIBaseUrl + "jobs/" + id
+				+ ".xml?api_key=" + zencoderAPIKey;
+		WebResource webResource = httpClient.resource(url);
+		Document response = webResource.get(Document.class);
+		return response;
+	}
 
 	public boolean resubmitJob(ZencoderJob job) {
 		int id;

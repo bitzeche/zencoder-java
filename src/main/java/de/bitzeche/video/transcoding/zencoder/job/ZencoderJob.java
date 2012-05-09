@@ -55,6 +55,10 @@ public class ZencoderJob {
 		this.outputs.add(output);
 	}
 
+	public List<ZencoderOutput> getOutputs() {
+		return this.outputs;
+	}
+	
 	public void deleteOutput(ZencoderOutput output) {
 		this.outputs.remove(output);
 	}
