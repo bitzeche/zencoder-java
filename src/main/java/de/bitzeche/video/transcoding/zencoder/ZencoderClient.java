@@ -96,14 +96,19 @@ public class ZencoderClient implements IZencoderClient {
 </api-response>
 	 * 
 	 */
-	
-	
+
+
 	private Integer findIdFromOutputNode(Node output) throws XPathExpressionException
 	{
 		Double idDouble = (Double)xPath.evaluate("output/id", output, XPathConstants.NUMBER);
 		return idDouble == null ? null : idDouble.intValue();
 	}
-	
+
+	private String findLabelFromOutputNode(Node output) throws XPathExpressionException
+	{
+		return (String) xPath.evaluate("output/label", output, XPathConstants.STRING);
+	}
+
 	/**
 	 * Complete output IDs from response.
 	 * @param job
@@ -112,7 +117,7 @@ public class ZencoderClient implements IZencoderClient {
 	private void completeJobInfo(ZencoderJob job, Document response) {
 		try {
 			NodeList outputs = (NodeList) xPath.evaluate("/api-response/job/outputs",
-				response, XPathConstants.NODESET);
+					response, XPathConstants.NODESET);
 			if (job.getOutputs().size() == 1)
 			{
 				Integer id = findIdFromOutputNode(outputs.item(0));
@@ -128,7 +133,7 @@ public class ZencoderClient implements IZencoderClient {
 				int outputSize = outputs.getLength();
 				for (int i=0; i<outputSize; i++) 
 				{
-					String label = (String) xPath.evaluate("output/label", outputs.item(i), XPathConstants.STRING);
+					String label = findLabelFromOutputNode(outputs.item(i));
 					if (label != null && !label.isEmpty()) 
 					{
 						int id = findIdFromOutputNode(outputs.item(i));
@@ -144,13 +149,13 @@ public class ZencoderClient implements IZencoderClient {
 					}
 				}
 			}
-			
+
 		} catch (XPathExpressionException e) {
 			LOGGER.error("XPath threw Exception", e);
 		}
 	}
-	
-	
+
+
 	@Override
 	public Document createJob(ZencoderJob job) {
 		Document data;
@@ -182,7 +187,7 @@ public class ZencoderClient implements IZencoderClient {
 	public ZencoderNotificationJobState jobProgress(ZencoderJob job) {
 		return jobProgress(job.getJobId());
 	}
-	
+
 	public ZencoderNotificationJobState jobProgress(int id) {
 		if (zencoderAPIVersion != ZencoderAPIVersion.API_V2) {
 			LOGGER.warn("jobProgress is only available for API v2.  Returning null.");
@@ -190,13 +195,12 @@ public class ZencoderClient implements IZencoderClient {
 		}
 		String url = zencoderAPIBaseUrl + "jobs/" + id
 				+ "/progress.xml?api_key=" + zencoderAPIKey;
-		System.out.println("Calling job state url: " + url);
 		WebResource webResource = httpClient.resource(url);
 		Document response = webResource.get(Document.class);
 		String stateString = null;
 		try {
 			stateString = (String) xPath.evaluate("/api-response/state",
-				response, XPathConstants.STRING);
+					response, XPathConstants.STRING);
 			return ZencoderNotificationJobState.getJobState(stateString);
 		} catch (IllegalArgumentException ex) {
 			LOGGER.error("Unable to find state for string '{}'", stateString);
@@ -206,16 +210,43 @@ public class ZencoderClient implements IZencoderClient {
 		return null;
 	}
 
-	public Document getJobDetails(ZencoderJob job) {
-		return getJobDetails(job.getJobId());
-	}
-	
-	public Document getJobDetails(int id) {
-		String url = zencoderAPIBaseUrl + "jobs/" + id
+	/**
+	 * NB: Not yet ready.  It is not setting the output-media-files correctly.
+	 */
+	public void completeJobDetails(ZencoderJob job) {
+		String url = zencoderAPIBaseUrl + "jobs/" + job.getJobId()
 				+ ".xml?api_key=" + zencoderAPIKey;
 		WebResource webResource = httpClient.resource(url);
 		Document response = webResource.get(Document.class);
-		return response;
+		Map<String, Node> outputNodes = new HashMap<String, Node>();
+		NodeList outputs;
+		try {
+			outputs = (NodeList) xPath.evaluate("/api-response/job/output-media-files",
+					response, XPathConstants.NODESET);
+			int outputSize = outputs.getLength();
+			for (int i=0; i<outputSize; i++)
+			{
+				String label = findLabelFromOutputNode(outputs.item(i));
+				if (label != null)
+				{
+					outputNodes.put(label, outputs.item(i));
+				}	
+			}
+			for (ZencoderOutput zcOutput : job.getOutputs())
+			{
+				if (zcOutput.getLabel() != null) {
+					Node outputNode = outputNodes.get(zcOutput.getLabel());
+					System.out.println("Checking node " + outputNode.getNodeName());
+					System.out.println("DurationInMs string: " + xPath.evaluate("output-media-file/duration_in_ms", outputNode, XPathConstants.STRING));
+					int durationInMs = ((Double) xPath.evaluate("output-media-file/duration_in_ms", outputNode, XPathConstants.NUMBER)).intValue();
+					zcOutput.setDurationInMs(durationInMs);
+					//Set other fields...
+				}
+			}
+		} catch (XPathExpressionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	public boolean resubmitJob(ZencoderJob job) {
@@ -273,14 +304,14 @@ public class ZencoderClient implements IZencoderClient {
 	@Deprecated
 	public boolean deleteJob(int id) {
 		throw new IllegalArgumentException("Deleting jobs is not supported at the moment. Use cancel instead.");
-		
-//		String url = zencoderAPIBaseUrl + "jobs/" + id + "?api_key="
-//				+ zencoderAPIKey;
-//		LOGGER.debug("calling to delete job: {}", url);
-//		WebResource webResource = httpClient.resource(url);
-//		ClientResponse response = webResource.delete(ClientResponse.class);
-//		int responseStatus = response.getStatus();
-//		return (responseStatus == 200);
+
+		//		String url = zencoderAPIBaseUrl + "jobs/" + id + "?api_key="
+		//				+ zencoderAPIKey;
+		//		LOGGER.debug("calling to delete job: {}", url);
+		//		WebResource webResource = httpClient.resource(url);
+		//		ClientResponse response = webResource.delete(ClientResponse.class);
+		//		int responseStatus = response.getStatus();
+		//		return (responseStatus == 200);
 	}
 
 	protected ClientResponse sendGetRequest(String url) {

@@ -45,6 +45,17 @@ public interface IZencoderClient {
 	 */
 	public ZencoderNotificationJobState jobProgress(ZencoderJob job);
 	
+	/*
+	 * Find and fill in the details for the given job
+	 * and its outputs.  This only works for outputs
+	 * with labels.
+	 * 
+	 * NB: Not yet ready.
+	 * 
+	 * @param job
+	 */
+//	public void completeJobDetails(ZencoderJob job);
+
 	/**
 	 * Send a resubmit request for a job.
 	 * @param jobId ID for the requested job.

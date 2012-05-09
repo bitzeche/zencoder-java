@@ -79,6 +79,8 @@ public class ZencoderOutput {
 	private boolean autolevel = false;
 	private boolean deblock = false;
 	private ZencoderDenoiseFilter denoise = ZencoderDenoiseFilter.NONE;
+	private int durationInMs;
+	
 	/*
 	 * Audio
 	 */
@@ -389,6 +391,14 @@ public class ZencoderOutput {
 	/*
 	 * ###### Setters #########
 	 */
+
+	public int getDurationInMs() {
+		return durationInMs;
+	}
+
+	public void setDurationInMs(int durationInMs) {
+		this.durationInMs = durationInMs;
+	}
 
 	public void setOutputURL(String outputURL) {
 		this.outputURL = outputURL;
