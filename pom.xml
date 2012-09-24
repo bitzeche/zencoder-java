@@ -14,9 +14,9 @@
 		</license>
 	</licenses>
 	<scm>
-		<connection>scm:svn:http://zencoder-java.googlecode.com/svn/trunk</connection>
-		<developerConnection>scm:svn:https://zencoder-java.googlecode.com/svn/trunk</developerConnection>
-		<url>http://zencoder-java.googlecode.com/svn/trunk</url>
+		<connection>scm:ssh://git@github.com/bitzeche/zencoder-java.git</connection>
+		<developerConnection>scm:ssh://git@github.com/bitzeche/zencoder-java.git</developerConnection>
+		<url>https://github.com/bitzeche/zencoder-java.git</url>
 	</scm>
 	<organization>
 		<name>Bitzeche GmbH</name>
@@ -25,7 +25,7 @@
 	</organization>
 	<issueManagement>
 		<system>Google Code</system>
-		<url>http://code.google.com/p/zencoder-java/issues/</url>
+		<url>https://github.com/bitzeche/zencoder-java/issues</url>
 	</issueManagement>
 	<developers>
 		<developer>
