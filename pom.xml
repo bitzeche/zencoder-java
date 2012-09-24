@@ -68,7 +68,7 @@
 	<properties>
 		<target.dir>target</target.dir>
 		<org.slf4j.version>1.6.1</org.slf4j.version>
-        <current.year>2012</current.year>
+		<current.year>2012</current.year>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -104,6 +104,12 @@
 			<groupId>com.sun.jersey.contribs</groupId>
 			<artifactId>jersey-apache-client</artifactId>
 			<version>1.4</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.1</version>
 		</dependency>
 	</dependencies>
 	<build>

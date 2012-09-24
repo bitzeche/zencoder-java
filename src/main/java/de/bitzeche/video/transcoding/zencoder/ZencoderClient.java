@@ -31,6 +31,7 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
@@ -43,6 +44,7 @@ import com.sun.jersey.client.apache.ApacheHttpClient;
 
 import de.bitzeche.video.transcoding.zencoder.enums.ZencoderAPIVersion;
 import de.bitzeche.video.transcoding.zencoder.job.ZencoderJob;
+import de.bitzeche.video.transcoding.zencoder.response.ZencoderErrorResponseException;
 
 public class ZencoderClient implements IZencoderClient {
 
@@ -73,7 +75,8 @@ public class ZencoderClient implements IZencoderClient {
 	}
 
 	@Override
-	public Document createJob(ZencoderJob job) {
+	public Document createJob(ZencoderJob job)
+			throws ZencoderErrorResponseException {
 		Document data;
 		try {
 			data = job.createXML();
@@ -87,10 +90,12 @@ public class ZencoderClient implements IZencoderClient {
 					"https://app.zencoder.com/api/jobs?format=xml", data);
 			String id = (String) xPath.evaluate("/api-response/job/id",
 					response, XPathConstants.STRING);
-			if (id != null) {
+			if (StringUtils.isNotEmpty(id)) {
 				job.setJobId(Integer.parseInt(id));
+				return response;
 			}
-			return response;
+			LOGGER.error("Error when sending request to Zencoder: ", response);
+			throw new ZencoderErrorResponseException(response);
 		} catch (ParserConfigurationException e) {
 			LOGGER.error("Parser threw Exception", e);
 		} catch (XPathExpressionException e) {
@@ -146,15 +151,16 @@ public class ZencoderClient implements IZencoderClient {
 
 	@Deprecated
 	public boolean deleteJob(int id) {
-		throw new IllegalArgumentException("Deleting jobs is not supported at the moment. Use cancel instead.");
-		
-//		String url = zencoderAPIBaseUrl + "jobs/" + id + "?api_key="
-//				+ zencoderAPIKey;
-//		LOGGER.debug("calling to delete job: {}", url);
-//		WebResource webResource = httpClient.resource(url);
-//		ClientResponse response = webResource.delete(ClientResponse.class);
-//		int responseStatus = response.getStatus();
-//		return (responseStatus == 200);
+		LOGGER.warn("Deleting jobs is deprecated. Use cancel instead.");
+		return cancelJob(id);
+
+		// String url = zencoderAPIBaseUrl + "jobs/" + id + "?api_key="
+		// + zencoderAPIKey;
+		// LOGGER.debug("calling to delete job: {}", url);
+		// WebResource webResource = httpClient.resource(url);
+		// ClientResponse response = webResource.delete(ClientResponse.class);
+		// int responseStatus = response.getStatus();
+		// return (responseStatus == 200);
 	}
 
 	protected ClientResponse sendGetRequest(String url) {

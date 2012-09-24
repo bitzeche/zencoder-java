@@ -37,6 +37,7 @@ import de.bitzeche.video.transcoding.zencoder.job.ZencoderOutput;
 import de.bitzeche.video.transcoding.zencoder.job.ZencoderS3AccessControlItem;
 import de.bitzeche.video.transcoding.zencoder.job.ZencoderThumbnail;
 import de.bitzeche.video.transcoding.zencoder.job.ZencoderWatermark;
+import de.bitzeche.video.transcoding.zencoder.response.ZencoderErrorResponseException;
 
 public class ZencoderClientTest {
 
@@ -99,7 +100,8 @@ public class ZencoderClientTest {
 	}
 
 	@Test(dataProvider = "ApiVersionDS")
-	public void createAndCancelJobTest(ApiVersionProvider provider) {
+	public void createAndCancelJobTest(ApiVersionProvider provider)
+			throws ZencoderErrorResponseException {
 
 		ZencoderAPIVersion apiVersion = provider.getApiVersion();
 		IZencoderClient client = createClient(apiVersion);
@@ -115,6 +117,18 @@ public class ZencoderClientTest {
 
 		boolean canceled = client.cancelJob(job);
 		Assert.assertTrue(canceled);
+	}
+
+	@Test(dataProvider = "ApiVersionDS", expectedExceptions = ZencoderErrorResponseException.class)
+	public void createJobAndProduceErrorWithMalformedVideoURL(
+			ApiVersionProvider provider) throws ZencoderErrorResponseException {
+		ZencoderAPIVersion apiVersion = provider.getApiVersion();
+		IZencoderClient client = createClient(apiVersion);
+		ZencoderJob job = new ZencoderJob("s" + TEST_VIDEO_URL);
+		job.setZencoderRegion(ZENCODER_REGION);
+		job.setTest(true);
+
+		client.createJob(job);
 	}
 
 	@Test(dataProvider = "ApiVersionDS", dependsOnMethods = "createAndCancelJobTest")
@@ -133,7 +147,7 @@ public class ZencoderClientTest {
 		Assert.assertTrue(canceled);
 	}
 
-	@Test(dataProvider = "ApiVersionDS", dependsOnMethods = "resubmitAndCancelJobTest", expectedExceptions = IllegalArgumentException.class)
+	@Test(dataProvider = "ApiVersionDS", dependsOnMethods = "resubmitAndCancelJobTest")
 	public void deleteTest(ApiVersionProvider provider) {
 		ZencoderAPIVersion apiVersion = provider.getApiVersion();
 		IZencoderClient client = createClient(apiVersion);
