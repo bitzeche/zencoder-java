@@ -17,7 +17,9 @@
 package de.bitzeche.video.transcoding.zencoder.job;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -26,6 +28,7 @@ import javax.xml.transform.TransformerException;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
 import de.bitzeche.video.transcoding.zencoder.enums.ZencoderAspectMode;
 import de.bitzeche.video.transcoding.zencoder.enums.ZencoderAudioCodec;
@@ -91,6 +94,7 @@ public class ZencoderOutput {
 	 */
 	private boolean isPublic = false;
 	private List<ZencoderS3AccessControlItem> aclItems = new ArrayList<ZencoderS3AccessControlItem>();
+	private Map<String, String> headers = new HashMap<String, String>();
 
 	public ZencoderOutput(String label) {
 		this.label = label;
@@ -179,6 +183,15 @@ public class ZencoderOutput {
 				if (acls != null) {
 					acl.appendChild(acls);
 				}
+			}
+		}
+		if (this.headers.size() != 0) {
+			Element acl = document.createElement("headers");
+			root.appendChild(acl);
+			for (String name : this.headers.keySet()) {
+				Node granteeNode = document.createElement(name);
+				granteeNode.setTextContent(this.headers.get(name));
+				acl.appendChild(granteeNode);
 			}
 		}
 		if (this.notifications.size() != 0) {
@@ -590,6 +603,18 @@ public class ZencoderOutput {
 
 	public void deleteAcl(ZencoderS3AccessControlItem item) {
 		this.aclItems.remove(item);
+	}
+	
+	/**
+	 * Add a header for S3 outputs.  See Amazon documentation for options: 
+	 * http://docs.amazonwebservices.com/AmazonS3/latest/API/RESTObjectPUT.html?r=7050
+	 * These values are ignored for non-S3 outputs.
+	 * 
+	 * @param name Header name
+	 * @param value Header value
+	 */
+	public void addHeader(String name, String value) {
+		this.headers.put(name, value);
 	}
 
 	public void addNotification(ZencoderNotification item) {

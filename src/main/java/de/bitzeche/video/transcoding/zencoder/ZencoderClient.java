@@ -17,6 +17,8 @@
 package de.bitzeche.video.transcoding.zencoder;
 
 import java.io.StringWriter;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
 import javax.xml.parsers.ParserConfigurationException;
@@ -36,6 +38,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.UniformInterfaceException;
@@ -43,8 +47,10 @@ import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.client.apache.ApacheHttpClient;
 
 import de.bitzeche.video.transcoding.zencoder.enums.ZencoderAPIVersion;
+import de.bitzeche.video.transcoding.zencoder.enums.ZencoderNotificationJobState;
 import de.bitzeche.video.transcoding.zencoder.job.ZencoderJob;
 import de.bitzeche.video.transcoding.zencoder.response.ZencoderErrorResponseException;
+import de.bitzeche.video.transcoding.zencoder.job.ZencoderOutput;
 
 public class ZencoderClient implements IZencoderClient {
 
@@ -74,6 +80,79 @@ public class ZencoderClient implements IZencoderClient {
 		zencoderAPIBaseUrl = zencoderAPIVersion.getBaseUrl();
 	}
 
+	/*
+	 * Typical response:
+<?xml version="1.0" encoding="UTF-8"?>
+<api-response>
+  <job>
+    <test type="boolean">true</test>
+    <outputs type="array">
+      <output>
+        <url>http://audio-bucket.jagtest.spotnote.s3.amazonaws.com/ApU001TestUserAx001.m4a</url>
+        <label>test_aac</label>
+        <id type="integer">29345822</id>
+      </output>
+    </outputs>
+    <id type="integer">17941347</id>
+  </job>
+</api-response>
+	 * 
+	 */
+	
+	
+	private Integer findIdFromOutputNode(Node output) throws XPathExpressionException
+	{
+		Double idDouble = (Double)xPath.evaluate("output/id", output, XPathConstants.NUMBER);
+		return idDouble == null ? null : idDouble.intValue();
+	}
+	
+	/**
+	 * Complete output IDs from response.
+	 * @param job
+	 * @param response
+	 */
+	private void completeJobInfo(ZencoderJob job, Document response) {
+		try {
+			NodeList outputs = (NodeList) xPath.evaluate("/api-response/job/outputs",
+				response, XPathConstants.NODESET);
+			if (job.getOutputs().size() == 1)
+			{
+				Integer id = findIdFromOutputNode(outputs.item(0));
+				if (id != null)	
+				{
+					job.getOutputs().get(0).setId(id);
+				}
+			}
+			else  
+			{
+				//try via labels
+				Map<String, Integer> ids = new HashMap<String, Integer>(); 
+				int outputSize = outputs.getLength();
+				for (int i=0; i<outputSize; i++) 
+				{
+					String label = (String) xPath.evaluate("output/label", outputs.item(i), XPathConstants.STRING);
+					if (label != null && !label.isEmpty()) 
+					{
+						int id = findIdFromOutputNode(outputs.item(i));
+						ids.put(label, new Integer(id));
+					}
+				}
+				for (ZencoderOutput zcOutput : job.getOutputs())
+				{
+					Integer foundId = ids.get(zcOutput.getLabel());
+					if (foundId != null)
+					{
+						zcOutput.setId(foundId);
+					}
+				}
+			}
+			
+		} catch (XPathExpressionException e) {
+			LOGGER.error("XPath threw Exception", e);
+		}
+	}
+	
+	
 	@Override
 	public Document createJob(ZencoderJob job)
 			throws ZencoderErrorResponseException {
@@ -87,13 +166,14 @@ public class ZencoderClient implements IZencoderClient {
 			apikey.setTextContent(zencoderAPIKey);
 			data.getDocumentElement().appendChild(apikey);
 			Document response = sendPostRequest(
-					"https://app.zencoder.com/api/jobs?format=xml", data);
+					zencoderAPIBaseUrl + "jobs?format=xml", data);
 			String id = (String) xPath.evaluate("/api-response/job/id",
 					response, XPathConstants.STRING);
 			if (StringUtils.isNotEmpty(id)) {
 				job.setJobId(Integer.parseInt(id));
 				return response;
 			}
+			completeJobInfo(job, response);
 			LOGGER.error("Error when sending request to Zencoder: ", response);
 			throw new ZencoderErrorResponseException(response);
 		} catch (ParserConfigurationException e) {
@@ -102,6 +182,45 @@ public class ZencoderClient implements IZencoderClient {
 			LOGGER.error("XPath threw Exception", e);
 		}
 		return null;
+	}
+
+	public ZencoderNotificationJobState jobProgress(ZencoderJob job) {
+		return jobProgress(job.getJobId());
+	}
+	
+	public ZencoderNotificationJobState jobProgress(int id) {
+		if (zencoderAPIVersion != ZencoderAPIVersion.API_V2) {
+			LOGGER.warn("jobProgress is only available for API v2.  Returning null.");
+			return null;
+		}
+		String url = zencoderAPIBaseUrl + "jobs/" + id
+				+ "/progress.xml?api_key=" + zencoderAPIKey;
+		System.out.println("Calling job state url: " + url);
+		WebResource webResource = httpClient.resource(url);
+		Document response = webResource.get(Document.class);
+		String stateString = null;
+		try {
+			stateString = (String) xPath.evaluate("/api-response/state",
+				response, XPathConstants.STRING);
+			return ZencoderNotificationJobState.getJobState(stateString);
+		} catch (IllegalArgumentException ex) {
+			LOGGER.error("Unable to find state for string '{}'", stateString);
+		} catch (XPathExpressionException e) {
+			LOGGER.error("XPath threw Exception", e);
+		}
+		return null;
+	}
+
+	public Document getJobDetails(ZencoderJob job) {
+		return getJobDetails(job.getJobId());
+	}
+	
+	public Document getJobDetails(int id) {
+		String url = zencoderAPIBaseUrl + "jobs/" + id
+				+ ".xml?api_key=" + zencoderAPIKey;
+		WebResource webResource = httpClient.resource(url);
+		Document response = webResource.get(Document.class);
+		return response;
 	}
 
 	public boolean resubmitJob(ZencoderJob job) {
@@ -116,7 +235,14 @@ public class ZencoderClient implements IZencoderClient {
 		String url = zencoderAPIBaseUrl + "jobs/" + id + "/resubmit?api_key="
 				+ zencoderAPIKey;
 		ClientResponse res = sendPutRequest(url);
-		return (res.getStatus() == 200 || res.getStatus() == 204);
+		int responseStatus = res.getStatus();
+		if (responseStatus == 200 || responseStatus == 204) {
+			return true;
+		} else if (responseStatus == 409) {
+			LOGGER.debug("Already finished job {}", id);
+			return true;
+		}
+		return false;
 	}
 
 	public boolean cancelJob(ZencoderJob job) {

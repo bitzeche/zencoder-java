@@ -18,10 +18,26 @@ package de.bitzeche.video.transcoding.zencoder.enums;
 
 public enum ZencoderNotificationJobState {
 	
-	PROCESSING, FINISHED, FAILED;
+	PENDING(false), 
+	WAITING(false), 
+	PROCESSING(false), 
+	FINISHED(true), 
+	FAILED(true), 
+	CANCELLED(true);
+	
+	private boolean complete;
+	public boolean isComplete() { return complete; }
+	
+	private ZencoderNotificationJobState(boolean complete) {
+		this.complete = complete;
+	}
 	
 	public String getJobStateString() {
 		return this.name().toLowerCase();
+	}
+
+	public static ZencoderNotificationJobState getJobState(String jobStateString) {
+		return ZencoderNotificationJobState.valueOf(jobStateString.toUpperCase());
 	}
 
 }
