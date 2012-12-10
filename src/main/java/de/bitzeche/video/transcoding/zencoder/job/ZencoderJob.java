@@ -47,7 +47,10 @@ public class ZencoderJob {
 
 	private List<ZencoderOutput> outputs = new ArrayList<ZencoderOutput>();
 
-	public ZencoderJob(String inputPath) {
+    private List<ZencoderNotification> notifications = new ArrayList<ZencoderNotification>();
+
+
+    public ZencoderJob(String inputPath) {
 		this.inputPath = inputPath;
 	}
 
@@ -96,6 +99,20 @@ public class ZencoderJob {
 		Node privateNode = document.createElement("private");
 		privateNode.setTextContent((this.isPrivate ? "1" : "0"));
 		root.appendChild(privateNode);
+
+        // job notifications
+        // API Note: Job-level notifications are supported only since API V2
+        if (this.notifications.size() != 0) {
+            Element notifis = document.createElement("notifications");
+            notifis.setAttribute("type", "array");
+            root.appendChild(notifis);
+            for (ZencoderNotification item : this.notifications) {
+                Element notif = item.createXML(document);
+                if (notif != null) {
+                    notifis.appendChild(notif);
+                }
+            }
+        }
 
 		if (outputs.size() == 0)
 			return document;
@@ -150,7 +167,11 @@ public class ZencoderJob {
 		return isTest;
 	}
 
-	public void setJobId(int id) {
+    public void getNotifications(ZencoderNotification item) {
+        this.notifications.add(item);
+    }
+
+    public void setJobId(int id) {
 		JobId = id;
 	}
 
@@ -173,4 +194,12 @@ public class ZencoderJob {
 	public void setPrivate(boolean isPrivate) {
 		this.isPrivate = isPrivate;
 	}
+
+    public void addNotification(ZencoderNotification item) {
+        this.notifications.add(item);
+    }
+
+    public void deleteNotification(ZencoderNotification item) {
+        this.notifications.remove(item);
+    }
 }
