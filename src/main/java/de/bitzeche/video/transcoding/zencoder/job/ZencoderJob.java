@@ -167,10 +167,6 @@ public class ZencoderJob {
 		return isTest;
 	}
 
-    public void getNotifications(ZencoderNotification item) {
-        this.notifications.add(item);
-    }
-
     public void setJobId(int id) {
 		JobId = id;
 	}
