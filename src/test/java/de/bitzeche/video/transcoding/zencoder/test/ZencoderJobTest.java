@@ -45,9 +45,18 @@ public class ZencoderJobTest {
 		job.setTest(true);
 		job.setPrivate(true);
 		job.setZencoderRegion(ZencoderRegion.ASIA);
-		
+		job.setPassThrough("user_id:100");
+
 		String doc = StringUtil.stripSpacesAndLineBreaksFrom(job.toString());
-		String expected = ("<?xmlversion=\"1.0\"encoding=\"UTF-8\"?><api-request><input>http://testpath/</input><region>asia</region><download_connections>10</download_connections><test>1</test><private>1</private></api-request>");
+		String expected = ("<?xmlversion=\"1.0\"encoding=\"UTF-8\"?>" +
+                "<api-request>" +
+                "<input>http://testpath/</input>" +
+                "<region>asia</region>" +
+                "<download_connections>10</download_connections>" +
+                "<pass_through>user_id:100</pass_through>" +
+                "<test>1</test>" +
+                "<private>1</private>" +
+                "</api-request>");
 		Assert.assertEquals(doc, expected);
 	}
 	
