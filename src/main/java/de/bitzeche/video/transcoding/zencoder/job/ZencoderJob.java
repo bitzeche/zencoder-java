@@ -49,6 +49,14 @@ public class ZencoderJob {
 
     private List<ZencoderNotification> notifications = new ArrayList<ZencoderNotification>();
 
+    /**
+     * According to <a href="zencoder API documentation">https://app.zencoder.com/docs/api/encoding</a> pass_through is
+     * "Optional information to store alongside this job".<br/>
+     * When pass_through field is provided during job submission it becomes available in job notification
+     * callback from the service.
+     */
+    private String passThrough;
+
 
     public ZencoderJob(String inputPath) {
 		this.inputPath = inputPath;
@@ -91,6 +99,12 @@ public class ZencoderJob {
 				.createElement("download_connections");
 		download_connections.setTextContent("" + this.downloadConnections);
 		root.appendChild(download_connections);
+
+		if (getPassThrough() != null) {
+            Node passThroughNode = document.createElement("pass_through");
+            passThroughNode.setTextContent(this.getPassThrough());
+            root.appendChild(passThroughNode);
+        }
 
 		Node test = document.createElement("test");
 		test.setTextContent((this.isTest ? "1" : "0"));
@@ -163,7 +177,11 @@ public class ZencoderJob {
 		return downloadConnections;
 	}
 
-	public boolean isTest() {
+    public String getPassThrough() {
+        return passThrough;
+    }
+
+    public boolean isTest() {
 		return isTest;
 	}
 
@@ -197,5 +215,9 @@ public class ZencoderJob {
 
     public void deleteNotification(ZencoderNotification item) {
         this.notifications.remove(item);
+    }
+
+    public void setPassThrough(String passThrough) {
+        this.passThrough = passThrough;
     }
 }
