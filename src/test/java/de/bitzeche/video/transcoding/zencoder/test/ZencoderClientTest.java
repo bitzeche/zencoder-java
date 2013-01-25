@@ -21,9 +21,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.SimpleHttpConnectionManager;
 import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
+
+import com.sun.jersey.client.apache.ApacheHttpClient;
+import com.sun.jersey.client.apache.ApacheHttpClientHandler;
+import com.sun.jersey.client.apache.config.DefaultApacheHttpClientConfig;
 
 import de.bitzeche.video.transcoding.zencoder.IZencoderClient;
 import de.bitzeche.video.transcoding.zencoder.ZencoderClient;
@@ -54,7 +60,15 @@ public class ZencoderClientTest {
 	}
 
 	public IZencoderClient createClient(ZencoderAPIVersion apiVersion) {
-		return new ZencoderClient(API_KEY, apiVersion);
+		ZencoderClient zencoderClient = new ZencoderClient(API_KEY, apiVersion);
+		HttpClient client = new HttpClient(new SimpleHttpConnectionManager());
+		ApacheHttpClientHandler apacheHttpClientHandler = new ApacheHttpClientHandler(
+				client, new DefaultApacheHttpClientConfig());
+		ApacheHttpClient httpClient = new ApacheHttpClient(
+				apacheHttpClientHandler);
+		zencoderClient.setHttpClient(httpClient);
+
+		return zencoderClient;
 	}
 
 	@Test(dataProvider = "ApiVersionDS")
