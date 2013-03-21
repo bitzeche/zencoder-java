@@ -36,6 +36,7 @@ public interface IZencoderClient {
 	 * Send a jobProgress request for a job.
 	 * @param jobId ID for the requested job.
 	 * @return State of job, or null if unable to parse response.
+	 * @deprecated use {@link #getJobState(int)}
 	 */
 	public ZencoderNotificationJobState jobProgress(int jobId);
 	
@@ -43,9 +44,52 @@ public interface IZencoderClient {
 	 * Send a jobProgress request for a job.
 	 * @param job
 	 * @return State of job, or null if unable to parse response.
+	 * @deprecated use {@link #getJobState(ZencoderJob)}
 	 */
 	public ZencoderNotificationJobState jobProgress(ZencoderJob job);
-	
+
+	/**
+	 * Send a job detail request for a job.
+	 * @param jobId ID for the requested job.
+	 * @return XML Response from zencoder
+	 */
+	public Document getJobDetails(int jobId);
+
+	/**
+	 * Send a job detail request for a job.
+	 * @param job
+	 * @return XML Response from zencoder
+	 */
+	public Document getJobDetails(ZencoderJob job);
+
+	/**
+	 * Send a jobProgress request for a job.
+	 * @param jobId ID for the requested job.
+	 * @return State of job, or null if unable to parse response.
+	 */
+	public Document getJobProgress(int jobId);
+
+	/**
+	 * Send a jobProgress request for a job.
+	 * @param job
+	 * @return State of job, or null if unable to parse response.
+	 */
+	public Document getJobProgress(ZencoderJob job);
+
+	/**
+	 * Send a jobProgress request to determine the state of a job.
+	 * @param jobId ID for the requested job.
+	 * @return State of job, or null if unable to parse response.
+	 */
+	public ZencoderNotificationJobState getJobState(int jobId);
+
+	/**
+	 * Send a jobProgress request to determine the state of a job.
+	 * @param job
+	 * @return State of job, or null if unable to parse response.
+	 */
+	public ZencoderNotificationJobState getJobState(ZencoderJob job);
+
 	/**
 	 * Send a resubmit request for a job.
 	 * @param jobId ID for the requested job.
