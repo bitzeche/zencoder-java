@@ -175,13 +175,18 @@ public class ZencoderClient implements IZencoderClient {
 	}
 
 	public ZencoderNotificationJobState jobProgress(int id) {
-		if (zencoderAPIVersion != ZencoderAPIVersion.API_V2) {
-			LOGGER.warn("jobProgress is only available for API v2.  Returning null.");
+		return getJobState(id);
+	}
+
+	public ZencoderNotificationJobState getJobState(ZencoderJob job) {
+		return getJobState(job.getJobId());
+	}
+
+	public ZencoderNotificationJobState getJobState(int id) {
+		Document response = getJobProgress(id);
+		if (response == null) {
 			return null;
 		}
-		String url = zencoderAPIBaseUrl + "jobs/" + id
-				+ "/progress.xml?api_key=" + zencoderAPIKey;
-		Document response = sendGetRequest(url);
 		String stateString = null;
 		try {
 			stateString = (String) xPath.evaluate("/api-response/state",
@@ -193,6 +198,20 @@ public class ZencoderClient implements IZencoderClient {
 			LOGGER.error("XPath threw Exception", e);
 		}
 		return null;
+	}
+
+	public Document getJobProgress(ZencoderJob job) {
+		return getJobProgress(job.getJobId());
+	}
+
+	public Document getJobProgress(int id) {
+		if (zencoderAPIVersion != ZencoderAPIVersion.API_V2) {
+			LOGGER.warn("jobProgress is only available for API v2.  Returning null.");
+			return null;
+		}
+		String url = zencoderAPIBaseUrl + "jobs/" + id
+				+ "/progress.xml?api_key=" + zencoderAPIKey;
+		return sendGetRequest(url);
 	}
 
 	public Document getJobDetails(ZencoderJob job) {
