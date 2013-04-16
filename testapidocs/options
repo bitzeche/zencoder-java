@@ -1,0 +1,26 @@
+-classpath
+'/Users/patrice/git/zencoder/target/classes:/Users/patrice/git/zencoder/target/test-classes:/Users/patrice/.m2/repository/ch/qos/logback/logback-core/0.9.25/logback-core-0.9.25.jar:/Users/patrice/.m2/repository/org/apache/commons/commons-lang3/3.1/commons-lang3-3.1.jar:/Users/patrice/.m2/repository/com/sun/jersey/jersey-core/1.17/jersey-core-1.17.jar:/Users/patrice/.m2/repository/org/mockito/mockito-all/1.8.4/mockito-all-1.8.4.jar:/Users/patrice/.m2/repository/com/google/inject/guice/2.0/guice-2.0.jar:/Users/patrice/.m2/repository/org/beanshell/bsh/2.0b4/bsh-2.0b4.jar:/Users/patrice/.m2/repository/com/sun/jersey/jersey-client/1.17/jersey-client-1.17.jar:/Users/patrice/.m2/repository/org/slf4j/slf4j-api/1.6.0/slf4j-api-1.6.0.jar:/Users/patrice/.m2/repository/commons-httpclient/commons-httpclient/3.1/commons-httpclient-3.1.jar:/Users/patrice/.m2/repository/junit/junit/3.8.1/junit-3.8.1.jar:/Users/patrice/.m2/repository/org/slf4j/jul-to-slf4j/1.6.1/jul-to-slf4j-1.6.1.jar:/Users/patrice/.m2/repository/aopalliance/aopalliance/1.0/aopalliance-1.0.jar:/Users/patrice/.m2/repository/com/sun/jersey/contribs/jersey-apache-client/1.17/jersey-apache-client-1.17.jar:/Users/patrice/.m2/repository/ch/qos/logback/logback-classic/0.9.25/logback-classic-0.9.25.jar:/Users/patrice/.m2/repository/com/beust/jcommander/1.5/jcommander-1.5.jar:/Users/patrice/.m2/repository/commons-logging/commons-logging/1.0.4/commons-logging-1.0.4.jar:/Users/patrice/.m2/repository/org/testng/testng/5.14/testng-5.14.jar:/Users/patrice/.m2/repository/org/slf4j/jcl-over-slf4j/1.6.1/jcl-over-slf4j-1.6.1.jar:/Users/patrice/.m2/repository/commons-codec/commons-codec/1.2/commons-codec-1.2.jar'
+-encoding
+'MacRoman'
+-protected
+-sourcepath
+'/Users/patrice/git/zencoder/src/test/java'
+-author
+-bottom
+'Copyright &#169; 2011-2013 <a href="http://www.bitzeche.de/">Bitzeche GmbH</a>. All Rights Reserved.'
+-charset
+'UTF-8'
+-d
+'/Users/patrice/git/zencoder/site/testapidocs'
+-docencoding
+'UTF-8'
+-doctitle
+'Java Client for Zencoder API 0.9.4-SNAPSHOT Test API'
+-link
+'../apidocs'
+-link
+'http://java.sun.com/javase/6/docs/api'
+-use
+-version
+-windowtitle
+'Java Client for Zencoder API 0.9.4-SNAPSHOT Test API'
