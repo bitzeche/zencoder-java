@@ -14,8 +14,8 @@
 		</license>
 	</licenses>
 	<scm>
-		<connection>scm:ssh://git@github.com/bitzeche/zencoder-java.git</connection>
-		<developerConnection>scm:ssh://git@github.com/bitzeche/zencoder-java.git</developerConnection>
+		<connection>scm:git:git@github.com:bitzeche/zencoder-java.git</connection>
+		<developerConnection>scm:git:git@github.com:bitzeche/zencoder-java.git</developerConnection>
 		<url>https://github.com/bitzeche/zencoder-java.git</url>
 	</scm>
 	<organization>
