@@ -114,7 +114,7 @@ public class ZencoderOutput {
 	public Element createXML(Document document) {
 		this.xmlDocument = document;
 		Element root = createElement("output");
-
+		
 		if (id != null)
 		{
 			createAndAppendElement("id", this.id, root);
@@ -161,6 +161,7 @@ public class ZencoderOutput {
 
 		if (this.watermarks.size() != 0) {
 			Element wms = document.createElement("watermarks");
+			wms.setAttribute("type", "array");
 			root.appendChild(wms);
 			for (ZencoderWatermark item : this.watermarks) {
 				Element wm = item.createXML(document);
