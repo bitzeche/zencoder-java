@@ -17,5 +17,18 @@
 package de.bitzeche.video.transcoding.zencoder.enums;
 
 public enum ZencoderRegion {
-	EUROPE, US, ASIA;
+	US("us"), EUROPE("europe"), ASIA("asia"), SA("sa"), AUSTRALIA("australia"),
+	VIRGINIA("us-n-virginia"), OREGON("us-oregon"), CALIFORNIA("us-n-california"),
+	DUBLIN("eu-dublin"), SINGAPORE("asia-singapore"), TOKYO("asia-tokyo"),
+	SAOPAULO("sa-saopaulo"), SYDNEY("australia-sydney");
+	
+	private final String regionCode;
+	
+	private ZencoderRegion(String code) {
+		this.regionCode = code;
+	}
+	
+	public String getRegionCode() {
+		return regionCode;
+	}
 }
