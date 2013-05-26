@@ -91,7 +91,7 @@ public class ZencoderJob {
 		// region
 		if (this.zencoderRegion != null) {
 			Node region = document.createElement("region");
-			region.setTextContent(this.zencoderRegion.name().toLowerCase());
+			region.setTextContent(this.zencoderRegion.getRegionCode());
 			root.appendChild(region);
 		}
 

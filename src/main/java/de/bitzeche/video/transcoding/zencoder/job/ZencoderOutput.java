@@ -456,17 +456,20 @@ public class ZencoderOutput {
 	}
 
 	public void setAudioCodec(ZencoderAudioCodec codec) {
-		if ((videoCodec.equals(ZencoderVideoCodec.h264) || videoCodec
-				.equals(ZencoderVideoCodec.vp6))
-				&& !(codec.equals(ZencoderAudioCodec.mp3) || codec
-						.equals(ZencoderAudioCodec.aac))) {
+		if ((videoCodec.equals(ZencoderVideoCodec.h264) || videoCodec.equals(ZencoderVideoCodec.vp6)
+				|| videoCodec.equals(ZencoderVideoCodec.mpeg4))
+				&& !(codec.equals(ZencoderAudioCodec.mp3) || codec.equals(ZencoderAudioCodec.aac))) {
 			throw new IllegalArgumentException(
-					"H264 and VP6 only support MP3 or AAC");
+					"H264, MPEG-4 and VP6 only support MP3 or AAC");
 		} else if ((videoCodec.equals(ZencoderVideoCodec.theora) || videoCodec
 				.equals(ZencoderVideoCodec.vp8))
 				&& !codec.equals(ZencoderAudioCodec.vorbis)) {
 			throw new IllegalArgumentException(
-					"H264 and VP8 only support MP3 or AAC");
+					"Theora and VP8 only support Vorbis");
+		} else if (videoCodec.equals(ZencoderVideoCodec.wmv)
+				&& !(codec.equals(ZencoderAudioCodec.wma) || codec.equals(ZencoderAudioCodec.mp3))) {
+			throw new IllegalArgumentException(
+					"WMV only support WMA and MP3");
 		}
 		this.audioCodec = codec;
 	}
