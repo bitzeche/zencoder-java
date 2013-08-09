@@ -93,6 +93,7 @@ public class ZencoderOutput {
 	 * S3
 	 */
 	private boolean isPublic = false;
+	private String credentials;
 	private List<ZencoderS3AccessControlItem> aclItems = new ArrayList<ZencoderS3AccessControlItem>();
 	private Map<String, String> headers = new HashMap<String, String>();
 
@@ -127,6 +128,7 @@ public class ZencoderOutput {
 		createAndAppendElement("start_clip", this.startClip, root);
 		createAndAppendElement("clip_length", this.clipLength, root);
 		createAndAppendElement("public", this.isPublic, root);
+		createAndAppendElement("credentials", this.credentials, root);
 
 		createAndAppendElement("video_codec", this.videoCodec.name(), root);
 		createAndAppendElement("width", this.width, root);
@@ -386,6 +388,10 @@ public class ZencoderOutput {
 	public boolean isPublic() {
 		return isPublic;
 	}
+	
+	public String getCredentials() {
+		return credentials;
+	}
 
 	/*
 	 * ###### Setters #########
@@ -599,6 +605,10 @@ public class ZencoderOutput {
 
 	public void setPublic(boolean isPublic) {
 		this.isPublic = isPublic;
+	}
+	
+	public void setCredentials(String credentials) {
+		this.credentials = credentials;
 	}
 
 	public void addAcl(ZencoderS3AccessControlItem item) {
