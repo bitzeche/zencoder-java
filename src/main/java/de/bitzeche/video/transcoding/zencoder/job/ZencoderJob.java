@@ -44,6 +44,8 @@ public class ZencoderJob {
 	private boolean isTest = false;
 
 	private boolean isPrivate = false;
+	
+	private String credentials;
 
 	private List<ZencoderOutput> outputs = new ArrayList<ZencoderOutput>();
 
@@ -93,6 +95,13 @@ public class ZencoderJob {
 			Node region = document.createElement("region");
 			region.setTextContent(this.zencoderRegion.getRegionCode());
 			root.appendChild(region);
+		}
+		
+		// credentials
+		if (this.credentials != null) {
+			Node credentials = document.createElement("credentials");
+			credentials.setTextContent(this.credentials);
+			root.appendChild(credentials);
 		}
 
 		Node download_connections = document
@@ -172,6 +181,10 @@ public class ZencoderJob {
 	public ZencoderRegion getZencoderRegion() {
 		return zencoderRegion;
 	}
+	
+	public String getCredentials() {
+		return credentials;
+	}
 
 	public int getDownloadConnections() {
 		return downloadConnections;
@@ -207,6 +220,10 @@ public class ZencoderJob {
 
 	public void setPrivate(boolean isPrivate) {
 		this.isPrivate = isPrivate;
+	}
+	
+	public void setCredentials(String credentials) {
+		this.credentials = credentials;
 	}
 
     public void addNotification(ZencoderNotification item) {

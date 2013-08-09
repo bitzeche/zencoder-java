@@ -39,12 +39,14 @@ public class ZencoderThumbnail {
 	private String size;
 	private String baseUrl;
 	private String prefix;
+	private String filename;
 	private ZencoderThumbnailFormat format;
 
 	/*
 	 * S3
 	 */
 	private boolean isPublic = false;
+	private String credentials;
 	private List<ZencoderS3AccessControlItem> aclItems = new ArrayList<ZencoderS3AccessControlItem>();
 
 	public Element createXML(Document document) {
@@ -95,10 +97,22 @@ public class ZencoderThumbnail {
 			prefixNode.setTextContent(this.prefix);
 			root.appendChild(prefixNode);
 		}
+		
+		if(this.filename != null) {
+			Node filenameNode = document.createElement("filename");
+			filenameNode.setTextContent(this.filename);
+			root.appendChild(filenameNode);
+		}
 
 		Node publicNode = document.createElement("public");
 		publicNode.setTextContent(this.isPublic ? "1" : "0");
 		root.appendChild(publicNode);
+		
+		if(this.credentials != null) {
+			Node credentialsNode = document.createElement("credentials");
+			credentialsNode.setTextContent(this.credentials);
+			root.appendChild(credentialsNode);
+		}
 
 		if (this.aclItems.size() != 0) {
 			Element acl = document.createElement("access-controls");
@@ -136,12 +150,21 @@ public class ZencoderThumbnail {
 	public String getPrefix() {
 		return prefix;
 	}
+	
+	public String getFilename() {
+		return filename;
+	}
+	
 	public ZencoderThumbnailFormat getFormat() {
 		return format;
 	}
 
 	public boolean isPublic() {
 		return isPublic;
+	}
+	
+	public String getCredentials() {
+		return credentials;
 	}
 
 
@@ -171,9 +194,17 @@ public class ZencoderThumbnail {
 	public void setPrefix(String prefix) {
 		this.prefix = prefix;
 	}
+	
+	public void setFilename(String filename) {
+		this.filename = filename;
+	}
 
 	public void setPublic(boolean isPublic) {
 		this.isPublic = isPublic;
+	}
+	
+	public void setCredentials(String credentials) {
+		this.credentials = credentials;
 	}
 
 	public void addAcl(ZencoderS3AccessControlItem item) {
