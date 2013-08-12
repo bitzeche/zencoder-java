@@ -3,4 +3,7 @@ zencoder-java
 
 Java Client Library for Zencoder API
 
-Current version: 
+**Current development version:** 0.9.4-SNAPSHOT
+
+## How to use zencoder-java
+TODO
