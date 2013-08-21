@@ -21,6 +21,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
@@ -62,6 +64,9 @@ public class ZencoderClient implements IZencoderClient {
 	private final String zencoderAPIKey;
 	private final ZencoderAPIVersion zencoderAPIVersion;
 	private XPath xPath;
+	
+	private final int MAX_CONNECTION_ATTEMPTS = 5;
+	private int currentConnectionAttempt = 0;
 
 	public ZencoderClient(String zencoderApiKey) {
 		this(zencoderApiKey, ZencoderAPIVersion.API_V1);
@@ -77,6 +82,11 @@ public class ZencoderClient implements IZencoderClient {
 
 		httpClient = ApacheHttpClient.create();
 		httpClient.setFollowRedirects(true);
+		
+		// set a 20 second timeout on the client
+		httpClient.setConnectTimeout(20000);
+		httpClient.setReadTimeout(20000);
+		
 		xPath = XPathFactory.newInstance().newXPath();
 		zencoderAPIBaseUrl = zencoderAPIVersion.getBaseUrl();
 	}
@@ -138,35 +148,77 @@ public class ZencoderClient implements IZencoderClient {
 			LOGGER.error("XPath threw Exception", e);
 		}
 	}
+	
+	private void resetConnectionCount() {
+		// reset to 0 for use in tracking connections next time
+		currentConnectionAttempt = 0;
+	}
+	
+	private Document createDocumentForException(String message) {
+		try {
+			DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+			DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
+			Document errorDocument = documentBuilder.newDocument();
+			Element root = errorDocument.createElemet("error");
+			errorDocument.appendChild(root);
+			Node input = errorDocument.createElement("reason");
+			input.setTextContent(message);
+			root.appendChild(input);
+			return errorDocument;
+		} catch (ParserConfigurationException e) {
+			LOGGER.error("Exception creating document for exception '" + message + "'", e);
+			return null;
+		}
+	}
 
 	@Override
 	public Document createJob(ZencoderJob job)
 			throws ZencoderErrorResponseException {
+		if(currentConnectionAttempt > MAX_CONNECTION_ATTEMPTS) {
+			resetConnectionCount();
+			String message = "Reached maximum number of connection attempts for Zencoder, aborting creation of job";
+			Document errorDocument = createDocumentForException(message);
+			throw new ZencoderErrorResponseException(errorDocument);
+		}
 		Document data;
 		try {
 			data = job.createXML();
 			if (data == null) {
-				LOGGER.error("Got no XML from Job");
+				String message = "Got no XML from Job";
+				LOGGER.error(message);
+				resetConnectionCount();
+				Document errorDocument = createDocumentForException(message);
+				throw new ZencoderErrorResponseException(errorDocument);
 			}
 			Element apikey = data.createElement("api_key");
 			apikey.setTextContent(zencoderAPIKey);
 			data.getDocumentElement().appendChild(apikey);
 			Document response = sendPostRequest(zencoderAPIBaseUrl
 					+ "jobs?format=xml", data);
+			// a null response means the call did not get through
+			// we should try again, since the job has not been started
+			if(response == null) {
+				currentConnectionAttempt++;
+				// maybe delay this call by a few seconds?
+				return createJob(job);
+			}
 			String id = (String) xPath.evaluate("/api-response/job/id",
 					response, XPathConstants.STRING);
 			if (StringUtils.isNotEmpty(id)) {
 				job.setJobId(Integer.parseInt(id));
+				resetConnectionCount();
 				return response;
 			}
 			completeJobInfo(job, response);
 			LOGGER.error("Error when sending request to Zencoder: ", response);
+			resetConnectionCount();
 			throw new ZencoderErrorResponseException(response);
 		} catch (ParserConfigurationException e) {
 			LOGGER.error("Parser threw Exception", e);
 		} catch (XPathExpressionException e) {
 			LOGGER.error("XPath threw Exception", e);
 		}
+		resetConnectionCount();
 		return null;
 	}
 
@@ -205,13 +257,25 @@ public class ZencoderClient implements IZencoderClient {
 	}
 
 	public Document getJobProgress(int id) {
+		if(currentConnectionAttempt > MAX_CONNECTION_ATTEMPTS) {
+			resetConnectionCount();
+			LOGGER.error("Reached maximum number of attempts for getting job progress. Aborting and returning null");
+			return null;
+		}
 		if (zencoderAPIVersion != ZencoderAPIVersion.API_V2) {
 			LOGGER.warn("jobProgress is only available for API v2.  Returning null.");
 			return null;
 		}
 		String url = zencoderAPIBaseUrl + "jobs/" + id
 				+ "/progress.xml?api_key=" + zencoderAPIKey;
-		return sendGetRequest(url);
+		Document result = sendGetRequest(url);
+		if(result == null) {
+			currentConnectionAttempt++;
+			// delay this call by a few seconds?
+			return getJobProgress(id);
+		}
+		resetConnectionCount();
+		return result;
 	}
 
 	public Document getJobDetails(ZencoderJob job) {
@@ -219,9 +283,21 @@ public class ZencoderClient implements IZencoderClient {
 	}
 
 	public Document getJobDetails(int id) {
+		if(currentConnectionAttempt > MAX_CONNECTION_ATTEMPTS) {
+			resetConnectionCount();
+			LOGGER.error("Reached maximum number of attempts for getting job details. Aborting and returning null");
+			return null;
+		}
 		String url = zencoderAPIBaseUrl + "jobs/" + id + ".xml?api_key="
 				+ zencoderAPIKey;
-		return sendGetRequest(url);
+		Document result = sendGetRequest(url);
+		if(result == null) {
+			currentConnectionAttempt++;
+			// delay this call by a few seconds?
+			return getJobDetails(id);
+		}
+		resetConnectionCount();
+		return result;
 	}
 
 	public boolean resubmitJob(ZencoderJob job) {
@@ -233,10 +309,20 @@ public class ZencoderClient implements IZencoderClient {
 	}
 
 	public boolean resubmitJob(int id) {
+		if(currentConnectionAttempt > MAX_CONNECTION_ATTEMPTS) {
+			resetConnectionCount();
+			LOGGER.error("Reached maximum number of attempts to resubmit job, aborting");
+			return false;
+		}
 		String url = zencoderAPIBaseUrl + "jobs/" + id + "/resubmit?api_key="
 				+ zencoderAPIKey;
 		ClientResponse response = sendPutRequest(url);
+		if(response == null) {
+			currentConnectionAtttempt++;
+			return resubmitJob(id);
+		}
 		int responseStatus = response.getStatus();
+		resetConnectionCount();
 		if (responseStatus == 200 || responseStatus == 204) {
 			return true;
 		} else if (responseStatus == 409) {
@@ -255,10 +341,20 @@ public class ZencoderClient implements IZencoderClient {
 	}
 
 	public boolean cancelJob(int id) {
+		if(currentConnectionAttempt > MAX_CONNECTION_ATTEMPTS) {
+			resetConnectionCount();
+			LOGGER.error("Reached maximum number of attempts to cancel job, aborting");
+			return false;
+		}
 		String url = zencoderAPIBaseUrl + "jobs/" + id
 				+ "/cancel.json?api_key=" + zencoderAPIKey;
 		ClientResponse res = sendPutRequest(url);
+		if(res == null) {
+			currentConnectionAttempt++;
+			return cancelJob(id);
+		}
 		int responseStatus = res.getStatus();
+		resetConnectionCount();
 		if (responseStatus == 200 || responseStatus == 204) {
 			return true;
 		} else if (responseStatus == 409) {
@@ -292,20 +388,38 @@ public class ZencoderClient implements IZencoderClient {
 
 	protected Document sendGetRequest(String url) {
 		LOGGER.debug("calling: {}", url);
-		WebResource webResource = httpClient.resource(url);
-		Document response = webResource.get(Document.class);
+		try {
+			WebResource webResource = httpClient.resource(url);
+			Document response = webResource.get(Document.class);
 
-		logXmlDocumentToDebug("Got response", response);
-		return response;
+			logXmlDocumentToDebug("Got response", response);
+			return response;
+		} catch (Exception e) {
+			if(e instanceof SocketTimeoutException) {
+				LOGGER.warn("Connection to Zencoder timed out");
+			} else {
+				LOGGER.warn(e.getMessage());
+			}
+		}
+		return null;
 	}
 
 	protected ClientResponse sendPutRequest(String url) {
 		LOGGER.debug("calling: {}", url);
-		WebResource webResource = httpClient.resource(url);
-		ClientResponse response = webResource.put(ClientResponse.class);
+		try {
+			WebResource webResource = httpClient.resource(url);
+			ClientResponse response = webResource.put(ClientResponse.class);
 
-		LOGGER.debug("Got response: {}", response);
-		return response;
+			LOGGER.debug("Got response: {}", response);
+			return response;
+		} catch (Exception e) {
+			if(e instanceof SocketTimeoutException) {
+				LOGGER.warn("Connection to Zencoder timed out");
+			} else {
+				LOGGER.warn(e.getMessage());
+			}
+		}
+		return null;
 
 	}
 
@@ -331,7 +445,14 @@ public class ZencoderClient implements IZencoderClient {
 			}
 			LOGGER.error("couldn't submit job: {}", errormessage);
 			return errorXml;
+		} catch (Exception e) {
+			if(e instanceof SocketTimeoutException) {
+				LOGGER.warn("Connection to Zencoder timed out");
+			} else {
+				LOGGER.warn(e.getMessage());
+			}
 		}
+		return null;
 
 	}
 
