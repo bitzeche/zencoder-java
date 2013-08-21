@@ -17,6 +17,7 @@
 package de.bitzeche.video.transcoding.zencoder;
 
 import java.io.StringWriter;
+import java.net.SocketTimeoutException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -159,7 +160,7 @@ public class ZencoderClient implements IZencoderClient {
 			DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
 			DocumentBuilder documentBuilder = documentBuilderFactory.newDocumentBuilder();
 			Document errorDocument = documentBuilder.newDocument();
-			Element root = errorDocument.createElemet("error");
+			Element root = errorDocument.createElement("error");
 			errorDocument.appendChild(root);
 			Node input = errorDocument.createElement("reason");
 			input.setTextContent(message);
@@ -318,7 +319,7 @@ public class ZencoderClient implements IZencoderClient {
 				+ zencoderAPIKey;
 		ClientResponse response = sendPutRequest(url);
 		if(response == null) {
-			currentConnectionAtttempt++;
+			currentConnectionAttempt++;
 			return resubmitJob(id);
 		}
 		int responseStatus = response.getStatus();
