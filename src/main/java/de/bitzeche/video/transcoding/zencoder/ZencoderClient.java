@@ -63,6 +63,7 @@ public class ZencoderClient implements IZencoderClient {
 	private Client httpClient;
 	private final String zencoderAPIBaseUrl;
 	private final String zencoderAPIKey;
+	private final Strign zencoderReadOnlyAPIKey;
 	private final ZencoderAPIVersion zencoderAPIVersion;
 	private XPath xPath;
 	
@@ -70,11 +71,20 @@ public class ZencoderClient implements IZencoderClient {
 	private int currentConnectionAttempt = 0;
 
 	public ZencoderClient(String zencoderApiKey) {
-		this(zencoderApiKey, ZencoderAPIVersion.API_V1);
+		this(zencoderApiKey, null, ZencoderAPIVersion.API_V1);
+	}
+	
+	public ZencoderClient(String zencdoerApiKey, String zencoderReadOnlyApiKey) {
+		this(zencoderApiKey, zencoderReadOnlyApiKey, ZencoderAPIVersion.API_V1);
+	}
+	
+	public ZencoderClient(String zencoderApiKey, ZencoderAPIVersion apiVersion) {
+		this(zencoderApiKey, null, apiVersion);
 	}
 
-	public ZencoderClient(String zencoderApiKey, ZencoderAPIVersion apiVersion) {
+	public ZencoderClient(String zencoderApiKey, String zencoderReadOnlyApiKey, ZencoderAPIVersion apiVersion) {
 		this.zencoderAPIKey = zencoderApiKey;
+		this.zencoderReadOnlyAPIKey = zencoderReadOnlyApiKey;
 		if (ZencoderAPIVersion.API_DEV.equals(apiVersion)) {
 			LOGGER.warn("!!! Using development version of zencoder API !!!");
 		}
@@ -267,8 +277,10 @@ public class ZencoderClient implements IZencoderClient {
 			LOGGER.warn("jobProgress is only available for API v2.  Returning null.");
 			return null;
 		}
+		String apiKey = zencoderAPIKey;
+		if(zencoderReadOnlyAPIKey != null) apiKey = zencoderReadOnlyAPIKey;
 		String url = zencoderAPIBaseUrl + "jobs/" + id
-				+ "/progress.xml?api_key=" + zencoderAPIKey;
+				+ "/progress.xml?api_key=" + apiKey;
 		Document result = sendGetRequest(url);
 		if(result == null) {
 			currentConnectionAttempt++;
@@ -289,8 +301,10 @@ public class ZencoderClient implements IZencoderClient {
 			LOGGER.error("Reached maximum number of attempts for getting job details. Aborting and returning null");
 			return null;
 		}
+		String apiKey = zencoderAPIKey;
+		if(zencoderReadOnlyAPIKey != null) apiKey = zencoderReadOnlyAPIKey;
 		String url = zencoderAPIBaseUrl + "jobs/" + id + ".xml?api_key="
-				+ zencoderAPIKey;
+				+ apiKey;
 		Document result = sendGetRequest(url);
 		if(result == null) {
 			currentConnectionAttempt++;
