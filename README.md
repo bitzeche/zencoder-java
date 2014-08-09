@@ -24,20 +24,29 @@ ApacheHttpClientHandler apacheHttpClientHandler = new ApacheHttpClientHandler(cl
 ApacheHttpClient httpClient = new ApacheHttpClient(apacheHttpClientHandler);
 zencoderClient.setHttpClient(httpClient); 
 ```
+
+### Create Job
+```java
+ZencoderJob job = new ZencoderJob("http://ca.bitzeche.de/big_buck_bunny_720p_h264.mov");
+
+//region where the job is processed
+job.setZencoderRegion(ZencoderRegion.EUROPE);
+
+//set test mode
+job.setTest(true);
+```
+
 ### Create Output
+```java
+ZencoderOutput output = new ZencoderOutput("test", "se://test/");
+job.addOutput(output);
+```
+
+### Create Notification
 ```java
 //Add notification email
 ZencoderNotification notification = new ZencoderNotification("test@test.de");
-
-ZencoderOutput output = new ZencoderOutput("test", "se://test/");
 output.addNotification(notification);
-
-ZencoderJob job = new ZencoderJob("http://ca.bitzeche.de/big_buck_bunny_720p_h264.mov");
-job.addOutput(output);
-//region where the job is processed
-job.setZencoderRegion(ZencoderRegion.EUROPE);
-//set test mode
-job.setTest(true);
 ```
 
 ### Submit Job
