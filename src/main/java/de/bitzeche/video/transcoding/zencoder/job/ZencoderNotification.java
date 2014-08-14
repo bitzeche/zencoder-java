@@ -27,10 +27,13 @@ import org.w3c.dom.Node;
 
 import de.bitzeche.video.transcoding.zencoder.util.XmlUtility;
 
+import java.util.Map;
+
 public class ZencoderNotification {
 
 	private String notificationString;
 	private String format;
+	private Map<String, String> headers;
 
 	public ZencoderNotification(String notificationDestination) {
 		this.notificationString = notificationDestination;
@@ -44,6 +47,16 @@ public class ZencoderNotification {
 			nfNode.setTextContent(this.format);
 			root.appendChild(nfNode);
 		}
+
+        if (this.headers != null) {
+            Node headersNode = document.createElement("headers");
+            root.appendChild(headersNode);
+            for (Map.Entry<String, String> headerEntry : headers.entrySet()) {
+                Node header = document.createElement(headerEntry.getKey());
+                header.setTextContent(headerEntry.getValue());
+                headersNode.appendChild(header);
+            }
+        }
 
 		Node urlNode = document.createElement("url");
 		urlNode.setTextContent(this.notificationString);
@@ -59,6 +72,14 @@ public class ZencoderNotification {
 	public void setFormat(String format) {
 		this.format = format;
 	}
+
+    public void setHeaders(Map<String, String> headers) {
+        this.headers = headers;
+    }
+
+    public Map<String, String> getHeaders() {
+        return headers;
+    }
 
 	public String toString() {
 		Element elem;
@@ -84,5 +105,4 @@ public class ZencoderNotification {
 		}
 		return this.getClass().getSimpleName();
 	}
-
 }

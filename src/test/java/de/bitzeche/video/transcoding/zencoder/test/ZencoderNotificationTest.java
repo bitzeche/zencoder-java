@@ -23,6 +23,8 @@ import org.testng.annotations.Test;
 
 import de.bitzeche.video.transcoding.zencoder.job.ZencoderNotification;
 
+import java.util.HashMap;
+
 public class ZencoderNotificationTest {
 
 	@Test
@@ -42,4 +44,16 @@ public class ZencoderNotificationTest {
 		// System.out.println(doc);
 		Assert.assertEquals(doc, expected);
 	}
+
+    @Test
+    public void testWithHeaders() throws ParserConfigurationException {
+        ZencoderNotification notif = new ZencoderNotification("test@test.de");
+        notif.setHeaders(new HashMap<String, String>(){{
+            put("cloudfront_url", "http://asdjaosidjas.cloudfront.net");
+        }});
+        String doc = StringUtil.stripSpacesAndLineBreaksFrom(notif.toString());
+        String expected = "<?xmlversion=\"1.0\"encoding=\"UTF-8\"?><notification><headers><cloudfront_url>http://asdjaosidjas.cloudfront.net</cloudfront_url></headers><url>test@test.de</url></notification>";
+        // System.out.println(doc);
+        Assert.assertEquals(doc, expected);
+    }
 }
