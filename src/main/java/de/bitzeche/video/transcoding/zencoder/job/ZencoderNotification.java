@@ -73,6 +73,9 @@ public class ZencoderNotification {
 		this.format = format;
 	}
 
+    /**
+     * @param headers see https://app.zencoder.com/docs/api/encoding/notifications/notification-headers
+     */
     public void setHeaders(Map<String, String> headers) {
         this.headers = headers;
     }
